@@ -18,6 +18,8 @@
 
 	let topCodesModule: any;
 	let topCodes: number[] = [];
+	let topcodeAudio : HTMLAudioElement | undefined;
+	//const audio1 = new Audio('/sounds/1.wav');
 
 	$: processTopCodes(topCodes);
 
@@ -26,21 +28,30 @@
 	};
 
 	async function processTopCodes(topcodes: number[]) {
-		console.log('HERE');
 		// enters pov
-		for (let i = 0; i < topcodes.length; i++) {
-			//if(mode.value == 'shared')
-			//play earcon to speakers
-			//if play
-			if (topcodes[i] == 681) {
-				//playRobotSound(681);
-				console.log('do something');
-				await new Promise((r) => setTimeout(r, 2000));
+		if(mode.value === 'no-awareness'){
+			playtoSpeakers(1);
+			console.log('in noA');
+		}
+		else {
+			for (let i = 0; i < topcodes.length; i++) {
+				console.log(mode.value);
+				if (mode.value === 'private') {
+						console.log('in PRIVATE');
+						// playtoSpeakers(1) + playtoHeadphones(topcodes[i]);
+				}
+				else if (mode.value === 'shared') {
+						// playtoSpeakers(topcodes[i]);
+						console.log('in shared');
+				}
 			}
 		}
 	}
 
 	onMount(async () => {
+		navigator.mediaDevices.getUserMedia({ audio: true });
+		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
+
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
 		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
@@ -54,12 +65,17 @@
 		topCodesModule.startStopVideoScan('video-canvas');
 	});
 
+	function checkOutputs() {
+        navigator.mediaDevices.getUserMedia({ audio: true });
+        navigator.mediaDevices.enumerateDevices().then(function (devices) {
+            devices.forEach(function (device) {
+                console.log(device.kind + ': ' + device.label + ' id = ' + device.deviceId);
+            });
+        });
+    }
 
 	function playRobotSound(arg1: number, angle = 0) {
-		if ( arg1 === 681) {
-			// earcon sound
-
-		} else if( arg1 === 115) {
+		if( arg1 === 115) {
 			//say something
 
 		} else if( arg1 === 589) {
@@ -83,34 +99,53 @@
 		}
 	}
 
-	function privateActions(topcodes: TopCode[]) {
+	function playtoSpeakers(code: number){
+		switch(code){
+				case 1:
+				topcodeAudio?.play();
+					// earcon
+					break;
+				case 115:
+					// sound for speak
+					break;
+				case 31:
+					// sound for move
+					break;
+				case 589:
+					// sound for dance
+					break;
+			}
+	}
+
+	function playtoHeadphones(code: number){
+		switch(code){
+				case 115:
+					// sound for speak
+					break;
+				case 31:
+					// sound for move
+					break;
+				case 589:
+					// sound for dance
+					break;
+			}
 
 	}
 
-	function sharedActions() {
-
-	}
-
-	function noAwarenessActions() {
-		
-	}
-
-
-	function checkOutputs() {
-        navigator.mediaDevices.getUserMedia({ audio: true });
-        navigator.mediaDevices.enumerateDevices().then(function (devices) {
-            devices.forEach(function (device) {
-                console.log(device.kind + ': ' + device.label + ' id = ' + device.deviceId);
-            });
-        });
-    }
-
-	function playtoSpeakers(){
-
-	}
-
-	function playtoHeadphones(){
-
+	function play(): void {
+		topcodeAudio?.play();
+		for (let i = 0; i < topCodes.length; i++) {
+			if( topCodes[i] === 115) {
+				// playRobotSound(topCodes[i]);
+				// fetch(`http://${robotIP}/speak`)
+			} else if( topCodes[i] === 589) {
+				// playRobotSound(topCodes[i]);
+				// fetch(`http://${robotIP}/dance`)
+			} else if( topCodes[i] === 31) {
+				// playRobotSound(topCodes[i]);
+				// fetch(`http://${robotIP}/move/forward`)
+			}
+		}
 	}
 </script>
 
@@ -132,7 +167,8 @@
 				</Select.Content>
 			</Select.Root>
 			<Input class="w-48" bind:value={robotIP} placeholder="192.168.1.1" />
-			<Button variant="outline" on:click={checkOutputs}>Devices</Button>
+			<Button on:click={checkOutputs}>Devices</Button>
+			<Button on:click={play}> PLAY </Button>
 		</div>
 	</div>
 	<Separator />
