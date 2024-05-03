@@ -19,7 +19,7 @@
 	let topCodesModule: any;
 	let topCodes: number[] = [];
 	let topcodeAudio : HTMLAudioElement | undefined;
-	//const audio1 = new Audio('/sounds/1.wav');
+	let playAudio : HTMLAudioElement | undefined;
 
 	$: processTopCodes(topCodes);
 
@@ -30,7 +30,7 @@
 	async function processTopCodes(topcodes: number[]) {
 		// enters pov
 		if(mode.value === 'no-awareness'){
-			playtoSpeakers(1);
+			topcodeAudio?.play();
 			console.log('in noA');
 		}
 		else {
@@ -38,7 +38,7 @@
 				console.log(mode.value);
 				if (mode.value === 'private') {
 						console.log('in PRIVATE');
-						// playtoSpeakers(1) + playtoHeadphones(topcodes[i]);
+						// topcodeAudio?.play(); + playtoHeadphones(topcodes[i]);
 				}
 				else if (mode.value === 'shared') {
 						// playtoSpeakers(topcodes[i]);
@@ -49,8 +49,9 @@
 	}
 
 	onMount(async () => {
-		navigator.mediaDevices.getUserMedia({ audio: true });
+		//navigator.mediaDevices.getUserMedia({ audio: true });
 		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
+		playAudio = new Audio('/sounds/lucky.wav');
 
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
@@ -74,76 +75,96 @@
         });
     }
 
-	function playRobotSound(arg1: number, angle = 0) {
-		if( arg1 === 115) {
-			//say something
 
-		} else if( arg1 === 589) {
-			// dance sound
-
-		} else if( arg1 === 31) {
-			switch(angle){
-				case 1:
-					// sound for forward
-					break;
-				case 2:
-					// sound for backward
-					break;
-				case 3:
-					// sound for left
-					break;
-				case 4:
-					// sound for right
-					break;
-			}
-		}
-	}
-
+	// shared actions and pings
 	function playtoSpeakers(code: number){
-		switch(code){
-				case 1:
-				topcodeAudio?.play();
-					// earcon
-					break;
-				case 115:
-					// sound for speak
-					break;
-				case 31:
-					// sound for move
-					break;
-				case 589:
-					// sound for dance
-					break;
+		if (code === 115 || code === 47){
+				//speak
+			} else if (code === 155 || code === 589){
+				//dance
+			} else if (code === 55 || code === 31){
+				//forward
+			} else if (code === 185 || code === 59){
+				//backward
+			} else if (code === 205 || code === 61){
+				//right
+			} else if (code === 285 || code === 79){
+				//left
 			}
 	}
 
-	function playtoHeadphones(code: number){
-		switch(code){
-				case 115:
-					// sound for speak
-					break;
-				case 31:
-					// sound for move
-					break;
-				case 589:
-					// sound for dance
-					break;
+	//play to headphones
+	function privateActions(topcodes : number[]){
+		for (let i = 0; i < topCodes.length; i++) {
+			if (topCodes[i] % 5 === 0){ // Player 1
+				switch (topCodes[i]) {
+					case 115:
+						// speak
+						break;
+					case 155:
+						// fetch(`http://${robotIP}/dance`);
+						break;
+					case 55:
+						// fetch(`http://${robotIP}/move/forward`);
+						break;
+					case 185:
+						// fetch(`http://${robotIP}/move/backward`);
+						break;
+					case 205:
+						// fetch(`http://${robotIP}/move/right`);
+						break;
+					case 285:
+						// fetch(`http://${robotIP}/move/left`);
+						break;
+				}
+			} else {
+				switch (topCodes[i]) {
+					case 47:
+						// speak
+						break;
+					case 589:
+						// fetch(`http://${robotIP}/dance`)
+						break;
+					case 31:
+						// fetch(`http://${robotIP}/move/forward`);
+						break;
+					case 59:
+						// fetch(`http://${robotIP}/move/backward`);
+						break;
+					case 61:
+						// fetch(`http://${robotIP}/move/right`);
+						break;
+					case 79:
+						// fetch(`http://${robotIP}/move/left`);
+						break;
+				}
 			}
-
-	}
+	}}
 
 	function play(): void {
-		topcodeAudio?.play();
+		playAudio?.play();
 		for (let i = 0; i < topCodes.length; i++) {
-			if( topCodes[i] === 115) {
-				// playRobotSound(topCodes[i]);
-				// fetch(`http://${robotIP}/speak`)
-			} else if( topCodes[i] === 589) {
-				// playRobotSound(topCodes[i]);
-				// fetch(`http://${robotIP}/dance`)
-			} else if( topCodes[i] === 31) {
-				// playRobotSound(topCodes[i]);
-				// fetch(`http://${robotIP}/move/forward`)
+			if (topCodes[i] === 115 || topCodes[i] === 47){
+				//speak
+			} else if (topCodes[i] === 155 || topCodes[i] === 589){
+				//dance
+				fetch(`http://${robotIP}/dance`);
+			} else if (topCodes[i] === 55 || topCodes[i] === 31){
+				//forward
+				// playtoSpeakers(topCodes[i]);
+				fetch(`http://${robotIP}/move/forward`);
+			} else if (topCodes[i] === 185 || topCodes[i] === 59){
+				//backward
+				// playtoSpeakers(topCodes[i]);
+				fetch(`http://${robotIP}/move/backward`);
+			} else if (topCodes[i] === 205 || topCodes[i] === 61){
+				//right
+				// playtoSpeakers(topCodes[i]);
+				fetch(`http://${robotIP}/move/right`);
+			} else if (topCodes[i] === 285 || topCodes[i] === 79){
+				//left
+				// playtoSpeakers(topCodes[i]);
+				fetch(`http://${robotIP}/move/left`);
 			}
 		}
 	}
