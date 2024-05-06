@@ -1,10 +1,10 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/button/button.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
 	import { Separator } from '$lib/components/ui/separator';
-	import type { Mode, TopCode } from '$lib/types';
+	import type { Mode } from '$lib/types';
 	import { onMount } from 'svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
 
 
 	const modes: { label: string; value: Mode }[] = [
@@ -20,6 +20,13 @@
 	let topCodes: number[] = [];
 	let topcodeAudio : HTMLAudioElement | undefined;
 	let playAudio : HTMLAudioElement | undefined;
+	let leftAudio: HTMLAudioElement | undefined;
+	let rightAudio : HTMLAudioElement | undefined;
+	let forwardAudio : HTMLAudioElement | undefined;
+	let	backwardAudio : HTMLAudioElement | undefined;
+	let audiosInitialized: boolean = false;
+	let urbanistaId = 'c85a0b94138e7a55dddb182f2b9bca9153c4b874b1e567e46c17a4edc2b0a951';
+	let jblId = '399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2';
 
 	$: processTopCodes(topCodes);
 
@@ -38,20 +45,48 @@
 				console.log(mode.value);
 				if (mode.value === 'private') {
 						console.log('in PRIVATE');
-						// topcodeAudio?.play(); + playtoHeadphones(topcodes[i]);
+						if (topcodes[i]%5 === 0) {
+							topcodeAudio?.play();
+							playtoHeadphones(topcodes[i]);
+						} else{
+							playtoHeadphones(topcodes[i]);
+						}
 				}
 				else if (mode.value === 'shared') {
-						// playtoSpeakers(topcodes[i]);
+						playtoSpeakers(topcodes[i]);
 						console.log('in shared');
 				}
 			}
 		}
 	}
 
-	onMount(async () => {
-		//navigator.mediaDevices.getUserMedia({ audio: true });
+	function initializeAudios(){
 		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
 		playAudio = new Audio('/sounds/lucky.wav');
+		leftAudio = new Audio('/sounds/esquerda.wav');
+		rightAudio = new Audio('/sounds/direita.wav');
+		forwardAudio = new Audio('/sounds/frente.wav');
+		backwardAudio = new Audio('/sounds/tras.wav');
+		audiosInitialized = true;
+	}
+
+	$: if (audiosInitialized) {
+		if ('setSinkId' in HTMLAudioElement.prototype) {
+			switch (mode.value) {
+				case 'private':
+					//audioBlock?.setSinkId(urbanistaId);
+					break;
+				case 'shared':
+					//audioBlock?.setSinkId(jblId);
+					break;
+			}
+		}
+	}
+
+
+	onMount(async () => {
+		//navigator.mediaDevices.getUserMedia({ audio: true });
+		initializeAudios();
 
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
@@ -75,95 +110,76 @@
         });
     }
 
-
 	// shared actions and pings
-	function playtoSpeakers(code: number){
+	function playtoSpeakers(code : number | string){
 		if (code === 115 || code === 47){
-				//speak
-			} else if (code === 155 || code === 589){
-				//dance
-			} else if (code === 55 || code === 31){
-				//forward
-			} else if (code === 185 || code === 59){
-				//backward
-			} else if (code === 205 || code === 61){
-				//right
-			} else if (code === 285 || code === 79){
-				//left
-			}
+				//speak block
+		} else if (code === 155 || code === 589){
+			//dance block
+		} else if (code === 55 || code === 31){
+			//forward block
+		} else if (code === 185 || code === 59){
+			//backward block
+		} else if (code === 205 || code === 61){
+			//right block
+		} else if (code === 285 || code === 79){
+			topcodeAudio?.play();
+			//left block
+		} else if (code === "forward"){
+			// robot speak forward
+			forwardAudio?.play();
+		} else if (code === "bacward"){
+			// robot speak backward
+			backwardAudio?.play();
+		} else if (code === "left"){
+			// robot speak left
+			leftAudio?.play();
+		} else if (code === "right"){
+			// robot speak right
+			rightAudio?.play();
+		} else if (code === "dance"){
+			// // robot speak
+		} else if (code === "speak"){
+			// little music
+		}
 	}
 
 	//play to headphones
-	function privateActions(topcodes : number[]){
-		for (let i = 0; i < topCodes.length; i++) {
-			if (topCodes[i] % 5 === 0){ // Player 1
-				switch (topCodes[i]) {
-					case 115:
-						// speak
-						break;
-					case 155:
-						// fetch(`http://${robotIP}/dance`);
-						break;
-					case 55:
-						// fetch(`http://${robotIP}/move/forward`);
-						break;
-					case 185:
-						// fetch(`http://${robotIP}/move/backward`);
-						break;
-					case 205:
-						// fetch(`http://${robotIP}/move/right`);
-						break;
-					case 285:
-						// fetch(`http://${robotIP}/move/left`);
-						break;
-				}
-			} else {
-				switch (topCodes[i]) {
-					case 47:
-						// speak
-						break;
-					case 589:
-						// fetch(`http://${robotIP}/dance`)
-						break;
-					case 31:
-						// fetch(`http://${robotIP}/move/forward`);
-						break;
-					case 59:
-						// fetch(`http://${robotIP}/move/backward`);
-						break;
-					case 61:
-						// fetch(`http://${robotIP}/move/right`);
-						break;
-					case 79:
-						// fetch(`http://${robotIP}/move/left`);
-						break;
-				}
-			}
-	}}
+	function playtoHeadphones(code: number){
+		if (code === 115 || code === 47){
+				//speak block
+			} else if (code === 155 || code === 589){
+				//dance block
+			} else if (code === 55 || code === 31){
+				//forward block
+			} else if (code === 185 || code === 59){
+				//backward block
+			} else if (code === 205 || code === 61){
+				//right block
+			} else if (code === 285 || code === 79){
+				//left block	
+	}
+}
 
 	function play(): void {
 		playAudio?.play();
 		for (let i = 0; i < topCodes.length; i++) {
 			if (topCodes[i] === 115 || topCodes[i] === 47){
-				//speak
+				playtoSpeakers("speak");
 			} else if (topCodes[i] === 155 || topCodes[i] === 589){
-				//dance
+				playtoSpeakers("dance");
 				fetch(`http://${robotIP}/dance`);
 			} else if (topCodes[i] === 55 || topCodes[i] === 31){
-				//forward
-				// playtoSpeakers(topCodes[i]);
+				playtoSpeakers("forward");
 				fetch(`http://${robotIP}/move/forward`);
 			} else if (topCodes[i] === 185 || topCodes[i] === 59){
-				//backward
-				// playtoSpeakers(topCodes[i]);
+				playtoSpeakers("backward");
 				fetch(`http://${robotIP}/move/backward`);
 			} else if (topCodes[i] === 205 || topCodes[i] === 61){
-				//right
-				// playtoSpeakers(topCodes[i]);
+				playtoSpeakers("right");
 				fetch(`http://${robotIP}/move/right`);
 			} else if (topCodes[i] === 285 || topCodes[i] === 79){
-				//left
-				// playtoSpeakers(topCodes[i]);
+				playtoSpeakers("left");
 				fetch(`http://${robotIP}/move/left`);
 			}
 		}
@@ -193,8 +209,8 @@
 		</div>
 	</div>
 	<Separator />
-	<div class="flex flex-1 flex-row overflow-y-auto">
-		<canvas id="video-canvas" width="600" height="600"></canvas>
+	<div class="flex-1 flex items-center justify-center">
+		<canvas id="video-canvas" height="480" width="640"></canvas>
 		<div class="ml-auto h-[800px] w-96">
 			<pre>{JSON.stringify(topCodes, null, 2)}</pre>
 		</div>
