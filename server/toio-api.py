@@ -26,12 +26,12 @@ moves = {
         "y": -10
     },
     "left": {
-        "x": 2,
+        "x": 3,
         "y": 8
     },
     "right": {
         "x": 8,
-        "y": 2
+        "y": 3
     }
 }
 
@@ -99,9 +99,8 @@ async def dance():
     if cube is None:
         return "Cube not connected", 400
 
-    await cube.api.motor.motor_control(10, 0)
-    await cube.api.sound.play_midi(1,[2,1,2])
-    await asyncio.sleep(2)
+    await cube.api.motor.motor_control(40, 0)
+    await asyncio.sleep(3)
     await cube.api.motor.motor_control(0, 0)
     return "Danced"
 

@@ -18,13 +18,22 @@
 
 	let topCodesModule: any;
 	let topCodes: number[] = [];
+
 	let topcodeAudio : HTMLAudioElement | undefined;
 	let playAudio : HTMLAudioElement | undefined;
 	let leftAudio: HTMLAudioElement | undefined;
 	let rightAudio : HTMLAudioElement | undefined;
 	let forwardAudio : HTMLAudioElement | undefined;
 	let	backwardAudio : HTMLAudioElement | undefined;
+	let blockDancar : HTMLAudioElement | undefined;
+	let blockRight : HTMLAudioElement | undefined;
+	let blockLeft : HTMLAudioElement | undefined;
+	let blockSpeak : HTMLAudioElement | undefined;
+	let blockForward : HTMLAudioElement | undefined;
+	let blockBack : HTMLAudioElement | undefined;
+
 	let audiosInitialized: boolean = false;
+
 	let urbanistaId = 'c85a0b94138e7a55dddb182f2b9bca9153c4b874b1e567e46c17a4edc2b0a951';
 	let jblId = '399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2';
 
@@ -67,6 +76,12 @@
 		rightAudio = new Audio('/sounds/direita.wav');
 		forwardAudio = new Audio('/sounds/frente.wav');
 		backwardAudio = new Audio('/sounds/tras.wav');
+		blockDancar = new Audio('/sounds/bloco_dancar.mp3');
+		blockRight = new Audio('/sounds/bloco_direita.mp3');
+		blockLeft = new Audio('/sounds/bloco_esquerda.mp3');
+		blockSpeak = new Audio('/sounds/bloco_falar.mp3');
+		blockForward = new Audio('/sounds/bloco_frente.mp3');
+		blockBack = new Audio('/sounds/bloco_tras.mp3');
 		audiosInitialized = true;
 	}
 
@@ -74,10 +89,20 @@
 		if ('setSinkId' in HTMLAudioElement.prototype) {
 			switch (mode.value) {
 				case 'private':
-					//audioBlock?.setSinkId(urbanistaId);
+					blockDancar?.setSinkId(urbanistaId);
+					blockRight?.setSinkId(urbanistaId);
+					blockLeft?.setSinkId(urbanistaId);
+					blockSpeak?.setSinkId(urbanistaId);
+					blockForward?.setSinkId(urbanistaId);
+					blockBack?.setSinkId(urbanistaId);
 					break;
 				case 'shared':
-					//audioBlock?.setSinkId(jblId);
+					blockDancar?.setSinkId(jblId);
+					blockRight?.setSinkId(jblId);
+					blockLeft?.setSinkId(jblId);
+					blockSpeak?.setSinkId(jblId);
+					blockForward?.setSinkId(jblId);
+					blockBack?.setSinkId(jblId);
 					break;
 			}
 		}
@@ -113,22 +138,27 @@
 	// shared actions and pings
 	function playtoSpeakers(code : number | string){
 		if (code === 115 || code === 47){
-				//speak block
+			//speak block
+			blockSpeak?.play();
 		} else if (code === 155 || code === 589){
 			//dance block
+			blockDancar?.play();
 		} else if (code === 55 || code === 31){
 			//forward block
+			blockForward?.play();
 		} else if (code === 185 || code === 59){
 			//backward block
+			blockBack?.play();
 		} else if (code === 205 || code === 61){
 			//right block
+			blockRight?.play();
 		} else if (code === 285 || code === 79){
-			topcodeAudio?.play();
 			//left block
+			blockLeft?.play();
 		} else if (code === "forward"){
 			// robot speak forward
 			forwardAudio?.play();
-		} else if (code === "bacward"){
+		} else if (code === "backward"){
 			// robot speak backward
 			backwardAudio?.play();
 		} else if (code === "left"){
@@ -138,9 +168,9 @@
 			// robot speak right
 			rightAudio?.play();
 		} else if (code === "dance"){
-			// // robot speak
-		} else if (code === "speak"){
 			// little music
+		} else if (code === "speak"){
+			// robot speak
 		}
 	}
 
@@ -148,16 +178,22 @@
 	function playtoHeadphones(code: number){
 		if (code === 115 || code === 47){
 				//speak block
+				blockSpeak?.play();
 			} else if (code === 155 || code === 589){
 				//dance block
+				blockDancar?.play();
 			} else if (code === 55 || code === 31){
 				//forward block
+				blockForward?.play();
 			} else if (code === 185 || code === 59){
 				//backward block
+				blockBack?.play();
 			} else if (code === 205 || code === 61){
 				//right block
+				blockRight?.play();
 			} else if (code === 285 || code === 79){
-				//left block	
+				//left block
+				blockLeft?.play();
 	}
 }
 
