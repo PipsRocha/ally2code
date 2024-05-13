@@ -1,12 +1,11 @@
 <script lang="ts">
+	import { debounce, playAudio, notEqualsCheck } from '$lib/utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
 	import { Separator } from '$lib/components/ui/separator';
 	import type { Mode } from '$lib/types';
 	import { onMount } from 'svelte';
-	import { playAudio } from '$lib/utils';
-
 
 	const modes: { label: string; value: Mode }[] = [
 		{ label: 'No Awareness', value: 'no-awareness' },
@@ -20,28 +19,28 @@
 	let topCodesModule: any;
 	let topCodes: number[] = [];
 
-	let audiocurr : HTMLAudioElement | undefined;
+	let audiocurr: HTMLAudioElement | undefined;
 
-	let topcodeAudio : HTMLAudioElement | undefined;
-	let playButAudio : HTMLAudioElement | undefined;
+	let topcodeAudio: HTMLAudioElement | undefined;
+	let playButAudio: HTMLAudioElement | undefined;
 	let leftAudio: HTMLAudioElement | undefined;
-	let rightAudio : HTMLAudioElement | undefined;
-	let forwardAudio : HTMLAudioElement | undefined;
-	let	backwardAudio : HTMLAudioElement | undefined;
+	let rightAudio: HTMLAudioElement | undefined;
+	let forwardAudio: HTMLAudioElement | undefined;
+	let backwardAudio: HTMLAudioElement | undefined;
 
-	let blockDancar : HTMLAudioElement | undefined;
-	let blockRight : HTMLAudioElement | undefined;
-	let blockLeft : HTMLAudioElement | undefined;
-	let blockSpeak : HTMLAudioElement | undefined;
-	let blockForward : HTMLAudioElement | undefined;
-	let blockBack : HTMLAudioElement | undefined;
+	let blockDancar: HTMLAudioElement | undefined;
+	let blockRight: HTMLAudioElement | undefined;
+	let blockLeft: HTMLAudioElement | undefined;
+	let blockSpeak: HTMLAudioElement | undefined;
+	let blockForward: HTMLAudioElement | undefined;
+	let blockBack: HTMLAudioElement | undefined;
 
-	let blockDancarP2 : HTMLAudioElement | undefined;
-	let blockRightP2 : HTMLAudioElement | undefined;
-	let blockLeftP2 : HTMLAudioElement | undefined;
-	let blockSpeakP2 : HTMLAudioElement | undefined;
-	let blockForwardP2 : HTMLAudioElement | undefined;
-	let blockBackP2 : HTMLAudioElement | undefined;
+	let blockDancarP2: HTMLAudioElement | undefined;
+	let blockRightP2: HTMLAudioElement | undefined;
+	let blockLeftP2: HTMLAudioElement | undefined;
+	let blockSpeakP2: HTMLAudioElement | undefined;
+	let blockForwardP2: HTMLAudioElement | undefined;
+	let blockBackP2: HTMLAudioElement | undefined;
 
 	let audiosInitialized: boolean = false;
 
@@ -49,39 +48,33 @@
 	let phonesId = '399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2'; //SWITCH BACK
 	let jblId = '20fbf631595a2899481151da2842a8a352b84700d52e318e51a4ceb1979efa67'; //SWITCH BACK
 
-	$: processTopCodes(topCodes);
 
-	const notEqualsCheck = (a: number[], b: number[]) => {
-		return JSON.stringify(a) !== JSON.stringify(b);
-	};
-
-	async function processTopCodes(topcodes: number[]) {
+	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
 		// enters pov
-		if(mode.value === 'no-awareness'){
+		if (mode.value === 'no-awareness') {
 			topcodeAudio?.play();
 			console.log('in noA');
-		}
-		else {
-			for (let i = 0; i < topcodes.length; i++) {
+		} else {
+			const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
+			for (let i = 0; i < addedTopCodes.length; i++) {
 				console.log(mode.value);
 				if (mode.value === 'private') {
-						console.log('in PRIVATE');
-						if (topcodes[i]%5 === 0) {
-							topcodeAudio?.play();
-							await playSounds(topcodes[i]);
-						} else{
-							await playSounds(topcodes[i]);
-						}
-				}
-				else if (mode.value === 'shared') {
-						await playSounds(topcodes[i]);
-						console.log('in shared');
+					console.log('in PRIVATE');
+					if (addedTopCodes[i] % 5 === 0) {
+						topcodeAudio?.play();
+						await playSounds(addedTopCodes[i]);
+					} else {
+						await playSounds(addedTopCodes[i]);
+					}
+				} else if (mode.value === 'shared') {
+					await playSounds(addedTopCodes[i]);
+					console.log('in shared');
 				}
 			}
 		}
 	}
 
-	function initializeAudios(){
+	function initializeAudios() {
 		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
 		playButAudio = new Audio('/sounds/lucky.wav');
 
@@ -131,7 +124,7 @@
 					blockSpeakP2?.setSinkId(urbanistaId);
 					blockForwardP2?.setSinkId(urbanistaId);
 					blockBackP2?.setSinkId(urbanistaId);
-					
+
 					break;
 				case 'shared':
 					playButAudio?.setSinkId(jblId);
@@ -153,80 +146,99 @@
 		}
 	}
 
-
 	onMount(async () => {
 		//navigator.mediaDevices.getUserMedia({ audio: true });
 		initializeAudios();
 
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
-		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
-			var json = JSON.parse(jsonString);
-			const newTopCodes = json.topcodes.map((c: any) => c.code);
-			if (notEqualsCheck(topCodes, newTopCodes)) {
-				topCodes = newTopCodes;
-			}
-			//topCodes = json.topcodes;
-		});
+		topCodesModule.setVideoFrameCallback(
+			'video-canvas',
+			debounce(function (jsonString: string) {
+				var json = JSON.parse(jsonString);
+				const newTopCodes = json.topcodes.map((c: any) => c.code);
+				if (notEqualsCheck(topCodes, newTopCodes)) {
+					const oldTopCodes = topCodes;
+					topCodes = newTopCodes;
+					processTopCodes(topCodes, oldTopCodes);
+				}
+			}),
+			1000
+		);
 		topCodesModule.startStopVideoScan('video-canvas');
 	});
 
 	function checkOutputs() {
-        navigator.mediaDevices.getUserMedia({ audio: true });
-        navigator.mediaDevices.enumerateDevices().then(function (devices) {
-            devices.forEach(function (device) {
-                console.log(device.kind + ': ' + device.label + ' id = ' + device.deviceId);
-            });
-        });
-    }
+		navigator.mediaDevices.getUserMedia({ audio: true });
+		navigator.mediaDevices.enumerateDevices().then(function (devices) {
+			devices.forEach(function (device) {
+				console.log(device.kind + ': ' + device.label + ' id = ' + device.deviceId);
+			});
+		});
+	}
 
 	// shared actions and pings
-	async function playSounds(code : number | string){
-		
-		if (code === 115) {
-			audiocurr = blockSpeakP2;
-		} else if (code === 47) {
-			audiocurr = blockSpeak;
-		} else if (code === 155){
-			audiocurr = blockDancarP2; }
-		else if (code === 589){
-			audiocurr = blockDancar;
-		} else if (code === 55){
-			audiocurr = blockForwardP2;
-		} else if (code === 31){
-			audiocurr = blockForward;}
-		else if (code === 185){
-			audiocurr = blockBackP2;
-		} else if (code === 59){
-			audiocurr = blockBack;
-		} else if (code === 205){
-			audiocurr = blockRightP2;
-		} else if (code === 61) {
-			audiocurr = blockRight;
-		} else if (code === 285){
-			audiocurr = blockLeftP2;
-		}else if (code === 79){
-			audiocurr = blockLeft;
-		} else if (code === "forward"){
-			// robot speak forward
-			audiocurr = forwardAudio;
-		} else if (code === "backward"){
-			// robot speak backward
-			audiocurr = backwardAudio;
-		} else if (code === "left"){
-			// robot speak left
-			audiocurr = leftAudio;
-		} else if (code === "right"){
-			// robot speak right
-			audiocurr = rightAudio;
-		} else if (code === "dance"){
-			// little music
-		} else if (code === "speak"){
-			// robot speak
+	async function playSounds(code: number | string) {
+		switch (code) {
+			case 115:
+				audiocurr = blockSpeakP2;
+				break;
+			case 47:
+				audiocurr = blockSpeak;
+				break;
+			case 155:
+				audiocurr = blockDancarP2;
+				break;
+			case 589:
+				audiocurr = blockDancar;
+				break;
+			case 55:
+				audiocurr = blockForwardP2;
+				break;
+			case 31:
+				audiocurr = blockForward;
+				break;
+			case 185:
+				audiocurr = blockBackP2;
+				break;
+			case 59:
+				audiocurr = blockBack;
+				break;
+			case 205:
+				audiocurr = blockRightP2;
+				break;
+			case 61:
+				audiocurr = blockRight;
+				break;
+			case 285:
+				audiocurr = blockLeftP2;
+				break;
+			case 79:
+				audiocurr = blockLeft;
+				break;
+			case 'forward':
+				audiocurr = forwardAudio;
+				break;
+			case 'backward':
+				audiocurr = backwardAudio;
+				break;
+			case 'left':
+				audiocurr = leftAudio;
+				break;
+			case 'right':
+				audiocurr = rightAudio;
+				break;
+			case 'dance':
+				// little music
+				break;
+			case 'speak':
+				// robot speak
+				break;
 		}
 
 		if (audiocurr) {
-			await playAudio(audiocurr);}
+			await playAudio(audiocurr);
+		}
 	}
 
 	async function play() {
@@ -234,23 +246,18 @@
 		playButAudio?.play();
 
 		for (let i = 0; i < topCodes.length; i++) {
-			if (topCodes[i] === 115 || topCodes[i] === 47){
-				playSounds("speak");
-			} else if (topCodes[i] === 155 || topCodes[i] === 589){
-				playSounds("dance");
-				await fetch(`http://${robotIP}/dance`);
-			} else if (topCodes[i] === 55 || topCodes[i] === 31){
-				playSounds("forward");
-				await fetch(`http://${robotIP}/move/forward`);
-			} else if (topCodes[i] === 185 || topCodes[i] === 59){
-				playSounds("backward");
-				await fetch(`http://${robotIP}/move/backward`);
-			} else if (topCodes[i] === 205 || topCodes[i] === 61){
-				playSounds("right");
-				await fetch(`http://${robotIP}/move/right`);
-			} else if (topCodes[i] === 285 || topCodes[i] === 79){
-				playSounds("left");
-				await fetch(`http://${robotIP}/move/left`);
+			if (topCodes[i] === 115 || topCodes[i] === 47) {
+				await Promise.all([playSounds('speak'), fetch(`http://${robotIP}/speak`)]);
+			} else if (topCodes[i] === 155 || topCodes[i] === 589) {
+				await Promise.all([playSounds('dance'), fetch(`http://${robotIP}/dance`)]);
+			} else if (topCodes[i] === 55 || topCodes[i] === 31) {
+				await Promise.all([playSounds('forward'), fetch(`http://${robotIP}/move/forward`)]);
+			} else if (topCodes[i] === 185 || topCodes[i] === 59) {
+				await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);
+			} else if (topCodes[i] === 205 || topCodes[i] === 61) {
+				await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);
+			} else if (topCodes[i] === 285 || topCodes[i] === 79) {
+				await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);
 			}
 		}
 		topCodesModule.startStopVideoScan();
@@ -261,9 +268,7 @@
 	<div class="container flex h-16 flex-row items-center justify-between py-4">
 		<h1 class="text-xl font-bold">Inclusive Robots</h1>
 		<div class="flex flex-row items-center gap-x-2">
-			<Button on:click={()=>fetch(`http://${robotIP}/connect`)}>
-				Connect to toio
-			</Button>
+			<Button on:click={() => fetch(`http://${robotIP}/connect`)}>Connect to toio</Button>
 			<Select.Root bind:selected={mode}>
 				<Select.Trigger class="w-48">
 					<Select.Value placeholder="Select a mode" />
@@ -276,7 +281,7 @@
 			</Select.Root>
 			<Input class="w-48" bind:value={robotIP} placeholder="192.168.1.1" />
 			<Button on:click={checkOutputs}>Devices</Button>
-			<Button on:click={play}> PLAY </Button>
+			<Button on:click={play}>PLAY</Button>
 		</div>
 	</div>
 	<Separator />

@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { cubicOut } from "svelte/easing";
 import type { TransitionConfig } from "svelte/transition";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -64,7 +64,22 @@ export const flyAndScale = (
 // makes playing audio return a promise
 export function playAudio(audio : HTMLAudioElement){
 	return new Promise(res=>{
-	  audio.play()
-	  audio.onended = res
+		audio.play()
+		audio.onended = res
 	})
-  }
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function debounce(callback: Function, wait = 300) {
+	let timeout: ReturnType<typeof setTimeout>;
+
+	return (...args: unknown[]) => {
+		clearTimeout(timeout);
+		timeout = setTimeout(() => callback(...args), wait);
+	};
+}
+
+
+export function notEqualsCheck(a: number[], b: number[]) {
+	return JSON.stringify(a) !== JSON.stringify(b);
+}
