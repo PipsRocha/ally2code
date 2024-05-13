@@ -81,7 +81,7 @@ async def move(direction):
         return "Cube not connected", 400
     if direction not in moves:
         return "Invalid direction", 400
-     currposition = position()
+    currposition = position()
     
     await cube.api.motor.motor_control_target(
         timeout=50,
