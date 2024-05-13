@@ -1,7 +1,7 @@
-import { type ClassValue, clsx } from "clsx";
-import { cubicOut } from "svelte/easing";
-import type { TransitionConfig } from "svelte/transition";
-import { twMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from 'clsx';
+import { cubicOut } from 'svelte/easing';
+import type { TransitionConfig } from 'svelte/transition';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -19,13 +19,9 @@ export const flyAndScale = (
 	params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 }
 ): TransitionConfig => {
 	const style = getComputedStyle(node);
-	const transform = style.transform === "none" ? "" : style.transform;
+	const transform = style.transform === 'none' ? '' : style.transform;
 
-	const scaleConversion = (
-		valueA: number,
-		scaleA: [number, number],
-		scaleB: [number, number]
-	) => {
+	const scaleConversion = (valueA: number, scaleA: [number, number], scaleB: [number, number]) => {
 		const [minA, maxA] = scaleA;
 		const [minB, maxB] = scaleB;
 
@@ -35,13 +31,11 @@ export const flyAndScale = (
 		return valueB;
 	};
 
-	const styleToString = (
-		style: Record<string, number | string | undefined>
-	): string => {
+	const styleToString = (style: Record<string, number | string | undefined>): string => {
 		return Object.keys(style).reduce((str, key) => {
 			if (style[key] === undefined) return str;
 			return str + `${key}:${style[key]};`;
-		}, "");
+		}, '');
 	};
 
 	return {
@@ -62,23 +56,12 @@ export const flyAndScale = (
 };
 
 // makes playing audio return a promise
-export function playAudio(audio : HTMLAudioElement){
-	return new Promise(res=>{
-		audio.play()
-		audio.onended = res
-	})
+export function playAudio(audio: HTMLAudioElement) {
+	return new Promise((res) => {
+		audio.play();
+		audio.onended = res;
+	});
 }
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function debounce(callback: Function, wait = 300) {
-	let timeout: ReturnType<typeof setTimeout>;
-
-	return (...args: unknown[]) => {
-		clearTimeout(timeout);
-		timeout = setTimeout(() => callback(...args), wait);
-	};
-}
-
 
 export function notEqualsCheck(a: number[], b: number[]) {
 	return JSON.stringify(a) !== JSON.stringify(b);

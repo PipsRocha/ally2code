@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { debounce, playAudio, notEqualsCheck } from '$lib/utils';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select';
 	import { Separator } from '$lib/components/ui/separator';
 	import type { Mode } from '$lib/types';
+	import { notEqualsCheck, playAudio } from '$lib/utils';
 	import { onMount } from 'svelte';
 
 	const modes: { label: string; value: Mode }[] = [
@@ -47,7 +47,6 @@
 	let urbanistaId = 'c85a0b94138e7a55dddb182f2b9bca9153c4b874b1e567e46c17a4edc2b0a951';
 	let phonesId = '399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2'; //SWITCH BACK
 	let jblId = '20fbf631595a2899481151da2842a8a352b84700d52e318e51a4ceb1979efa67'; //SWITCH BACK
-
 
 	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
 		// enters pov
@@ -106,7 +105,7 @@
 				case 'no-awareness':
 					topcodeAudio?.setSinkId(jblId);
 					playButAudio?.setSinkId(jblId);
-
+					break;
 				case 'private':
 					topcodeAudio?.setSinkId(jblId);
 					playButAudio?.setSinkId(jblId);
@@ -124,7 +123,6 @@
 					blockSpeakP2?.setSinkId(urbanistaId);
 					blockForwardP2?.setSinkId(urbanistaId);
 					blockBackP2?.setSinkId(urbanistaId);
-
 					break;
 				case 'shared':
 					playButAudio?.setSinkId(jblId);
@@ -146,15 +144,16 @@
 		}
 	}
 
+	let lastExecutionTime = 0;
 	onMount(async () => {
 		//navigator.mediaDevices.getUserMedia({ audio: true });
 		initializeAudios();
 
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
-		topCodesModule.setVideoFrameCallback(
-			'video-canvas',
-			debounce(function (jsonString: string) {
+		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
+			const currentTime = Date.now();
+			if (currentTime - lastExecutionTime >= 1000) {
 				var json = JSON.parse(jsonString);
 				const newTopCodes = json.topcodes.map((c: any) => c.code);
 				if (notEqualsCheck(topCodes, newTopCodes)) {
@@ -162,9 +161,10 @@
 					topCodes = newTopCodes;
 					processTopCodes(topCodes, oldTopCodes);
 				}
-			}),
-			1000
-		);
+				// Update the last execution time
+				lastExecutionTime = currentTime;
+			}
+		});
 		topCodesModule.startStopVideoScan('video-canvas');
 	});
 
@@ -285,7 +285,7 @@
 		</div>
 	</div>
 	<Separator />
-	<div class="flex-1 flex items-center justify-center">
+	<div class="flex flex-1 items-center justify-center">
 		<canvas id="video-canvas" height="480" width="640"></canvas>
 		<div class="ml-auto h-[800px] w-96">
 			<pre>{JSON.stringify(topCodes, null, 2)}</pre>
