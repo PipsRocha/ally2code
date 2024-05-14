@@ -194,17 +194,9 @@ async def move(direction):
         return "Invalid direction", 400
     
     movement = Movement[direction]
-    print(movement.name)
     thechange = moves[currorientation][movement]
-    print (thechange.x)
-    print(thechange.y)
-    print(thechange.angle)
-    
     newpos = Position(currposition.x +thechange.x, currposition.y+thechange.y)
-    print(newpos.x)
-    print(newpos.y)
     neworientation = thechange.angle
-    print (neworientation)
     
     if (check_position(newpos)):
         newcoordinates = get_coordinates(newpos)
@@ -223,6 +215,13 @@ async def move(direction):
         currposition = newpos
         currorientation = neworientation
         print(currposition)
+        
+        if (currposition.x == labyrinth_train.target_position.x and currposition.y == labyrinth_train.target_position.y):
+            await cube.api.motor.motor_control(40, 0)
+            await asyncio.sleep(3)
+            await cube.api.motor.motor_control(0, 0)
+            return "Finished"
+            
         return "Moved"
     
     return "Can't Move"
