@@ -20,10 +20,10 @@ class Movement(Enum):
     right = 4
 
 class Orientation(Enum):
-    north = 1
-    east = 2
-    south = 3
-    west = 4
+    north = 270
+    east = 360
+    south = 90
+    west = 180
     
 class Position:
     def __init__(self, x: int, y: int):
@@ -31,9 +31,10 @@ class Position:
         self.y = y
         
 class PositionChange:
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int, angle: int):
         self.x = x
         self.y = y
+        self.angle = angle
         
 class Labyrinth:
     def __init__(self, matrix: List[List[int]], initial_position: Position, initial_orientation: Orientation, target_position: Position):
@@ -48,28 +49,28 @@ class Labyrinth:
 """
 moves = {
     Orientation.north: {
-        Movement.forward: PositionChange(0, -1),
-        Movement.backward: PositionChange(0, 1),
-        Movement.left: PositionChange(-1, 0),
-        Movement.right: PositionChange(1, 0)
+        Movement.forward: PositionChange(0, -1, Orientation.north),
+        Movement.backward: PositionChange(0, 1, Orientation.south),
+        Movement.left: PositionChange(-1, 0, Orientation.west),
+        Movement.right: PositionChange(1, 0, Orientation.east)
     },
     Orientation.east: {
-        Movement.forward: PositionChange(1, 0),
-        Movement.backward: PositionChange(-1, 0),
-        Movement.left: PositionChange(0, -1),
-        Movement.right: PositionChange(0, 1)
+        Movement.forward: PositionChange(1, 0, Orientation.east),
+        Movement.backward: PositionChange(-1, 0, Orientation.west),
+        Movement.left: PositionChange(0, -1, Orientation.north),
+        Movement.right: PositionChange(0, 1, Orientation.south)
     },
     Orientation.south: {
-        Movement.forward: PositionChange(0, 1),
-        Movement.backward: PositionChange(0, -1),
-        Movement.left: PositionChange(1, 0),
-        Movement.right: PositionChange(-1, 0)
+        Movement.forward: PositionChange(0, 1, Orientation.south),
+        Movement.backward: PositionChange(0, -1, Orientation.north),
+        Movement.left: PositionChange(1, 0, Orientation.east),
+        Movement.right: PositionChange(-1, 0, Orientation.west)
     },
     Orientation.west: {
-        Movement.forward: PositionChange(-1, 0),
-        Movement.backward: PositionChange(1, 0),
-        Movement.left: PositionChange(0, 1),
-        Movement.right: PositionChange(0, -1)
+        Movement.forward: PositionChange(-1, 0, Orientation.west),
+        Movement.backward: PositionChange(1, 0, Orientation.east),
+        Movement.left: PositionChange(0, 1, Orientation.south),
+        Movement.right: PositionChange(0, -1, Orientation.north)
     }
 }
 
@@ -86,8 +87,8 @@ mat = [
     [119,293], [163,293], [206,293], [250,293], [293,293], [336,293], [380,293],
     [119,336], [163,336], [206,336], [250,336], [293,336], [336,336], [380,336]
 ]
-num_rows = 5
-num_cols = 7
+num_rows = 4
+num_cols = 6
 
 """
     LABYRINTH
@@ -95,16 +96,17 @@ num_cols = 7
     initial_position: starting position
     target_position: target position
 """
-labyrinth = Labyrinth(
+labyrinth_train = Labyrinth(
     matrix = [
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0],
-        [0, 1, 0, 0, 0, 1, 0],
-        [0, 1, 1, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 1]
     ],
-    initial_position = Position(3, 2),
-    target_position = Position(6, 4)
+    initial_position = Position(6, 4),
+    target_position = Position(3, 0),
+    initial_orientation= Orientation.north
 )
 
 """
@@ -141,21 +143,22 @@ async def connect():
     cube = ToioCoreCube(device_list[0].interface)
     await cube.connect()
     
-    currposition = initial_pos["training"]
-    print(currposition)
-    
-    currcoordinates = get_coordinates(currposition)
+    newcoordinates = get_coordinates(labyrinth_train.initial_position)
     
     await cube.api.motor.motor_control_target(
         timeout=50,
         movement_type=MovementType.Linear,
         speed=Speed(
-            max=10, speed_change_type=SpeedChangeType.Constant),
+            max=100, speed_change_type=SpeedChangeType.Constant),
         target=TargetPosition(
-            cube_location=CubeLocation(point=Point(x=currcoordinates[0], y=currcoordinates[1]), angle=270),
+            cube_location=CubeLocation(point=Point(x=newcoordinates[0], y=newcoordinates[1]), angle=270),
             rotation_option=RotationOption.AbsoluteOptimal,
         ),
     )
+    
+    currposition = labyrinth_train.initial_position
+    currorientation = labyrinth_train.initial_orientation
+    print(currposition)
     
     return "Connected"
 
@@ -183,29 +186,46 @@ async def disconnect():
 async def move(direction):
     global cube
     global currposition
+    global currorientation
      
     if cube is None:
         return "Cube not connected", 400
-    if direction not in moves:
+    if direction not in Movement.__members__:
         return "Invalid direction", 400
+    
+    movement = Movement[direction]
+    print(movement.name)
+    thechange = moves[currorientation][movement]
+    print (thechange.x)
+    print(thechange.y)
+    print(thechange.angle)
+    
+    newpos = Position(currposition.x +thechange.x, currposition.y+thechange.y)
+    print(newpos.x)
+    print(newpos.y)
+    neworientation = thechange.angle
+    print (neworientation)
+    
+    if (check_position(newpos)):
+        newcoordinates = get_coordinates(newpos)
+    
+        await cube.api.motor.motor_control_target(
+            timeout=70,
+            movement_type=MovementType.Linear,
+            speed=Speed(
+                max=10, speed_change_type=SpeedChangeType.Constant),
+            target=TargetPosition(
+                cube_location=CubeLocation(point=Point(x=newcoordinates[0], y=newcoordinates[1]), angle=neworientation.value),
+                rotation_option=RotationOption.AbsoluteOptimal,
+            ),
+        )
         
-    move = moves[direction]
-    newpos = [currposition[0] + move["x"], currposition[1] + move["y"]]
-    newcoordinates = get_coordinates(newpos)
+        currposition = newpos
+        currorientation = neworientation
+        print(currposition)
+        return "Moved"
     
-    await cube.api.motor.motor_control_target(
-        timeout=50,
-        movement_type=MovementType.Linear,
-        speed=Speed(
-            max=10, speed_change_type=SpeedChangeType.Constant),
-        target=TargetPosition(
-            cube_location=CubeLocation(point=Point(x=newcoordinates[0], y=newcoordinates[1]), angle=0),
-            rotation_option=RotationOption.AbsoluteOptimal,
-        ),
-    )
-    currposition = newpos
-    
-    return "Moved"
+    return "Can't Move"
 
 
 """
@@ -248,17 +268,17 @@ def get_angle(position):
     return (int(position[57:60]))
 
 def get_coordinates(pos):
-    x = pos[0]
-    y = pos[1]
+    x = pos.x
+    y = pos.y
     index = y * 7 + x
     return mat[index]
     
 def check_position(position: Position) -> bool:
-    if position.x < 0 or position.x >= num_cols:
+    if position.x < 0 or position.x > num_cols:
         return False
-    if position.y < 0 or position.y >= num_rows:
+    if position.y < 0 or position.y > num_rows:
         return False
-    return labyrinth.matrix[position.y][position.x] == 0
+    return labyrinth_train.matrix[position.y][position.x] == 1
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
