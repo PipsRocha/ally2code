@@ -4,6 +4,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Separator } from '$lib/components/ui/separator';
 	import type { Mode } from '$lib/types';
+	import type { Labyrinth } from '$lib/types';
 	import { notEqualsCheck, playAudio } from '$lib/utils';
 	import { onMount } from 'svelte';
 
@@ -13,7 +14,19 @@
 		{ label: 'Shared', value: 'shared' }
 	];
 
+	const labyrinths: { label: string; value: Labyrinth }[] = [
+		{ label: 'Training', value: 'labyrinth_train' },
+		{ label: 'Puzzle 1', value: 'labyrinth_p1' },
+		{ label: 'Puzzle 2', value: 'labyrinth_p2' },
+		{ label: 'Puzzle 3', value: 'labyrinth_p3' },
+		{ label: 'Puzzle 4', value: 'labyrinth_p4' },
+		{ label: 'Puzzle 5', value: 'labyrinth_p5' },
+		{ label: 'Puzzle 6', value: 'labyrinth_p6' }
+	];
+
 	let mode: { label: string; value: Mode } = modes[0];
+	let lab: { label: string; value: Labyrinth } = labyrinths[0];
+
 	let robotIP: string = '127.0.0.1:5000';
 
 	let topCodesModule: any;
@@ -27,6 +40,8 @@
 	let rightAudio: HTMLAudioElement | undefined;
 	let forwardAudio: HTMLAudioElement | undefined;
 	let backwardAudio: HTMLAudioElement | undefined;
+	let danceAudio: HTMLAudioElement | undefined;
+	let speakAudio: HTMLAudioElement | undefined;
 
 	let blockDancar: HTMLAudioElement | undefined;
 	let blockRight: HTMLAudioElement | undefined;
@@ -45,8 +60,8 @@
 	let audiosInitialized: boolean = false;
 
 	let urbanistaId = 'c85a0b94138e7a55dddb182f2b9bca9153c4b874b1e567e46c17a4edc2b0a951';
-	let phonesId = '399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2'; //SWITCH BACK
-	let jblId = '20fbf631595a2899481151da2842a8a352b84700d52e318e51a4ceb1979efa67'; //SWITCH BACK
+	let phonesId = '20fbf631595a2899481151da2842a8a352b84700d52e318e51a4ceb1979efa67';
+	let jblId = "399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2";
 
 	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
 		// enters pov
@@ -81,6 +96,8 @@
 		rightAudio = new Audio('/sounds/direita.wav');
 		forwardAudio = new Audio('/sounds/frente.wav');
 		backwardAudio = new Audio('/sounds/tras.wav');
+		danceAudio = new Audio('/sounds/dance_robot.wav');
+		speakAudio = new Audio('/sounds/robot_speak.wav');
 
 		blockDancar = new Audio('/sounds/bloco_dancar.mp3');
 		blockRight = new Audio('/sounds/bloco_direita.mp3');
@@ -99,46 +116,43 @@
 		audiosInitialized = true;
 	}
 
+	function blocks_setSink(deviceId : string){
+		blockDancar?.setSinkId(deviceId);
+		blockRight?.setSinkId(deviceId);
+		blockLeft?.setSinkId(deviceId);
+		blockSpeak?.setSinkId(deviceId);
+		blockForward?.setSinkId(deviceId);
+		blockBack?.setSinkId(deviceId);
+
+		blockDancarP2?.setSinkId(deviceId);
+		blockRightP2?.setSinkId(deviceId);
+		blockLeftP2?.setSinkId(deviceId);
+		blockSpeakP2?.setSinkId(deviceId);
+		blockForwardP2?.setSinkId(deviceId);
+		blockBackP2?.setSinkId(deviceId);
+	}
+
 	$: if (audiosInitialized) {
 		if ('setSinkId' in HTMLAudioElement.prototype) {
+			leftAudio?.setSinkId(phonesId);
+			rightAudio?.setSinkId(phonesId);
+			forwardAudio?.setSinkId(phonesId);
+			backwardAudio?.setSinkId(phonesId);
+			danceAudio?.setSinkId(phonesId);
+			speakAudio?.setSinkId(phonesId);
+
+			playButAudio?.setSinkId(phonesId);
+
 			switch (mode.value) {
 				case 'no-awareness':
-					topcodeAudio?.setSinkId(jblId);
-					playButAudio?.setSinkId(jblId);
+					topcodeAudio?.setSinkId(phonesId);					
 					break;
 				case 'private':
-					topcodeAudio?.setSinkId(jblId);
-					playButAudio?.setSinkId(jblId);
-
-					blockDancar?.setSinkId(urbanistaId);
-					blockRight?.setSinkId(urbanistaId);
-					blockLeft?.setSinkId(urbanistaId);
-					blockSpeak?.setSinkId(urbanistaId);
-					blockForward?.setSinkId(urbanistaId);
-					blockBack?.setSinkId(urbanistaId);
-
-					blockDancarP2?.setSinkId(urbanistaId);
-					blockRightP2?.setSinkId(urbanistaId);
-					blockLeftP2?.setSinkId(urbanistaId);
-					blockSpeakP2?.setSinkId(urbanistaId);
-					blockForwardP2?.setSinkId(urbanistaId);
-					blockBackP2?.setSinkId(urbanistaId);
+					topcodeAudio?.setSinkId(phonesId);
+					blocks_setSink(urbanistaId);
 					break;
 				case 'shared':
-					playButAudio?.setSinkId(jblId);
-					blockDancar?.setSinkId(jblId);
-					blockRight?.setSinkId(jblId);
-					blockLeft?.setSinkId(jblId);
-					blockSpeak?.setSinkId(jblId);
-					blockForward?.setSinkId(jblId);
-					blockBack?.setSinkId(jblId);
-
-					blockDancarP2?.setSinkId(jblId);
-					blockRightP2?.setSinkId(jblId);
-					blockLeftP2?.setSinkId(jblId);
-					blockSpeakP2?.setSinkId(jblId);
-					blockForwardP2?.setSinkId(jblId);
-					blockBackP2?.setSinkId(jblId);
+					blocks_setSink(phonesId);
 					break;
 			}
 		}
@@ -153,7 +167,7 @@
 		topCodesModule = TopCodes;
 		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
 			const currentTime = Date.now();
-			if (currentTime - lastExecutionTime >= 1000) {
+			if (currentTime - lastExecutionTime >= 1500) {
 				var json = JSON.parse(jsonString);
 				const newTopCodes = json.topcodes.map((c: any) => c.code);
 				if (notEqualsCheck(topCodes, newTopCodes)) {
@@ -167,15 +181,6 @@
 		});
 		topCodesModule.startStopVideoScan('video-canvas');
 	});
-
-	function checkOutputs() {
-		navigator.mediaDevices.getUserMedia({ audio: true });
-		navigator.mediaDevices.enumerateDevices().then(function (devices) {
-			devices.forEach(function (device) {
-				console.log(device.kind + ': ' + device.label + ' id = ' + device.deviceId);
-			});
-		});
-	}
 
 	// shared actions and pings
 	async function playSounds(code: number | string) {
@@ -229,10 +234,10 @@
 				audiocurr = rightAudio;
 				break;
 			case 'dance':
-				// little music
+				audiocurr = danceAudio;
 				break;
 			case 'speak':
-				// robot speak
+				audiocurr = speakAudio;
 				break;
 		}
 
@@ -242,26 +247,51 @@
 	}
 
 	async function play() {
-		topCodesModule.startStopVideoScan();
+		
 		playButAudio?.play();
 
-		for (let i = 0; i < topCodes.length; i++) {
+		for (let i = 0; i < topCodes.length+1; i++) {
+
 			if (topCodes[i] === 115 || topCodes[i] === 47) {
-				await Promise.all([playSounds('speak'), fetch(`http://${robotIP}/speak`)]);
+				await Promise.all([playSounds('speak'), fetch(`http://${robotIP}/speak`)])
 			} else if (topCodes[i] === 155 || topCodes[i] === 589) {
-				await Promise.all([playSounds('dance'), fetch(`http://${robotIP}/dance`)]);
+				await Promise.all([playSounds('dance'), fetch(`http://${robotIP}/dance`)])
 			} else if (topCodes[i] === 55 || topCodes[i] === 31) {
-				await Promise.all([playSounds('forward'), fetch(`http://${robotIP}/move/forward`)]);
+				await Promise.all([playSounds('forward'), fetch(`http://${robotIP}/move/forward`)])
 			} else if (topCodes[i] === 185 || topCodes[i] === 59) {
-				await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);
+				await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)])
 			} else if (topCodes[i] === 205 || topCodes[i] === 61) {
-				await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);
+				await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)])
 			} else if (topCodes[i] === 285 || topCodes[i] === 79) {
-				await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);
+				await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)])
 			}
 		}
-		topCodesModule.startStopVideoScan();
 	}
+
+	function checkOutputs() {
+		navigator.mediaDevices.getUserMedia({ audio: true });
+		navigator.mediaDevices.enumerateDevices().then(function (devices) {
+			devices.forEach(function (device) {
+				console.log(device.kind + ': ' + device.label + ' id = ' + device.deviceId);
+			});
+		});
+	}
+
+	async function onDemand() {
+		console.log("ON DEMAND")
+		for (let i = 0; i < topCodes.length+1; i++) {
+			if(mode.value == 'private'){
+				blocks_setSink(phonesId);
+
+				await playSounds(topCodes[i]);
+
+				blocks_setSink(urbanistaId);
+			} else {
+				await playSounds(topCodes[i]);
+			}
+		}
+	}
+
 </script>
 
 <div class="flex h-full flex-col">
@@ -279,8 +309,19 @@
 					{/each}
 				</Select.Content>
 			</Select.Root>
+			<Select.Root bind:selected={lab}>
+				<Select.Trigger class="w-48">
+					<Select.Value placeholder="Select a puzzle" />
+				</Select.Trigger>
+				<Select.Content>
+					{#each labyrinths as lab}
+						<Select.Item value={lab.value} label={lab.label}>{lab.label} </Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
 			<Input class="w-48" bind:value={robotIP} placeholder="192.168.1.1" />
 			<Button on:click={checkOutputs}>Devices</Button>
+			<Button on:click={onDemand}>On Demand</Button>
 			<Button on:click={play}>PLAY</Button>
 		</div>
 	</div>

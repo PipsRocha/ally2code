@@ -10,8 +10,12 @@ import asyncio
 from enum import Enum
 from toio import *
 from quart import Quart
-from typing import List, Tuple
+from typing import List
+from quart_cors import cors
+
+
 app = Quart(__name__)
+app = cors(app, allow_origin="*")
 
 class Movement(Enum):
     forward = 1
@@ -106,6 +110,58 @@ labyrinth_train = Labyrinth(
     ],
     initial_position = Position(6, 4),
     target_position = Position(3, 0),
+    initial_orientation= Orientation.north
+)
+
+labyrinth_p1 = Labyrinth(
+    matrix = [
+        [0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 1, 1, 1],
+        [0, 0, 0, 0, 1, 0, 0]
+    ],
+    initial_position = Position(4, 4),
+    target_position = Position(3, 0),
+    initial_orientation= Orientation.north
+)
+
+labyrinth_p2 = Labyrinth(
+    matrix = [
+        [1, 1, 1, 1, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0, 0]
+    ],
+    initial_position = Position(2, 4),
+    target_position = Position(3, 0),
+    initial_orientation= Orientation.north
+)
+
+labyrinth_p3 = Labyrinth(
+    matrix = [
+        [1, 1, 0, 0, 1, 0, 0],
+        [1, 0, 0, 0, 1, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0]
+    ],
+    initial_position = Position(4, 0),
+    target_position = Position(1, 0),
+    initial_orientation= Orientation.south
+)
+
+labyrinth_p4 = Labyrinth(
+    matrix = [
+        [0, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0],
+        [1, 0, 0, 0, 1, 0, 0],
+        [1, 0, 0, 0, 1, 0, 0]
+    ],
+    initial_position = Position(4, 4),
+    target_position = Position(0, 4),
     initial_orientation= Orientation.north
 )
 
