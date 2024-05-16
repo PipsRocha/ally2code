@@ -279,7 +279,9 @@
 
 	async function onDemand() {
 		console.log("ON DEMAND")
-		for (let i = 0; i < topCodes.length+1; i++) {
+		for (let i = 0; i < topCodes.length; i++) {
+			console.log(i);
+			console.log(topCodes[i]);
 			if(mode.value == 'private'){
 				blocks_setSink(phonesId);
 

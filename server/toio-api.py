@@ -117,8 +117,8 @@ labyrinth_p1 = Labyrinth(
     matrix = [
         [0, 0, 0, 1, 1, 1, 1],
         [0, 0, 0, 0, 0, 1, 1],
-        [0, 0, 0, 0, 0, 1, 1],
-        [0, 0, 0, 0, 1, 1, 1],
+        [0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 1, 1, 0],
         [0, 0, 0, 0, 1, 0, 0]
     ],
     initial_position = Position(4, 4),
@@ -129,8 +129,8 @@ labyrinth_p1 = Labyrinth(
 labyrinth_p2 = Labyrinth(
     matrix = [
         [1, 1, 1, 1, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0],
         [1, 1, 1, 0, 0, 0, 0],
         [0, 0, 1, 0, 0, 0, 0]
     ],
@@ -154,31 +154,61 @@ labyrinth_p3 = Labyrinth(
 
 labyrinth_p4 = Labyrinth(
     matrix = [
-        [0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0],
-        [1, 1, 1, 1, 1, 0, 0],
-        [1, 0, 0, 0, 1, 0, 0],
-        [1, 0, 0, 0, 1, 0, 0]
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 0, 1, 1, 1],
+        [1, 0, 1, 0, 1, 0, 0],
+        [1, 0, 1, 1, 1, 0, 0]
     ],
-    initial_position = Position(4, 4),
-    target_position = Position(0, 4),
+    initial_position = Position(0, 4),
+    target_position = Position(6, 2),
     initial_orientation= Orientation.north
 )
 
-"""
-    INITIAL POSITION
-"""
+labyrinth_p5 = Labyrinth(
+    matrix = [
+        [0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 1, 0, 1],
+        [0, 0, 0, 0, 1, 1, 1]
+    ],
+    initial_position = Position(2, 2),
+    target_position = Position(0, 5),
+    initial_orientation= Orientation.east
+)
 
-initial_pos = {
-    "training": [6, 4],
-    "map_1": [3,2]
-}
+labyrinth_p6 = Labyrinth(
+    matrix = [
+        [0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0]
+    ],
+    initial_position = Position(6, 3),
+    target_position = Position(6, 0),
+    initial_orientation= Orientation.west
+)
 
 
 """ toio cube """
 global cube
 cube : ToioCoreCube | None = None
 
+green = IndicatorParam(
+    duration_ms=0,
+    color = Color(r = 0, g = 255, b = 0)
+)
+
+yellow = IndicatorParam(
+    duration_ms=0,
+    color= Color(r=255,g= 255,b=0)
+)
+
+""" labyrinth """
+global currlabyrinth
+currlabyrinth = Labyrinth
 global currposition
 currposition = Position | None
 global currorientation
@@ -190,16 +220,20 @@ currorientation = Orientation | None
 @app.get("/connect")
 async def connect():
     global cube
-    global labyrinth
     global currposition
     global currorientation
+    global currlabyrinth
+    
     device_list = await BLEScanner.scan(1)
     if len(device_list) == 0:
         return "No devices found", 400
     cube = ToioCoreCube(device_list[0].interface)
     await cube.connect()
     
-    newcoordinates = get_coordinates(labyrinth_train.initial_position)
+    await cube.api.indicator.turn_on(yellow)
+    
+    currlabyrinth = labyrinth_train
+    newcoordinates = get_coordinates(currlabyrinth.initial_position)
     
     await cube.api.motor.motor_control_target(
         timeout=50,
@@ -212,9 +246,9 @@ async def connect():
         ),
     )
     
-    currposition = labyrinth_train.initial_position
-    currorientation = labyrinth_train.initial_orientation
-    print(currposition)
+    currposition = currlabyrinth.initial_position
+    currorientation = currlabyrinth.initial_orientation
+    print(currposition.x, currposition.y)
     
     return "Connected"
 
@@ -243,6 +277,7 @@ async def move(direction):
     global cube
     global currposition
     global currorientation
+    global currlabyrinth
      
     if cube is None:
         return "Cube not connected", 400
@@ -272,15 +307,80 @@ async def move(direction):
         currorientation = neworientation
         print(currposition)
         
-        if (currposition.x == labyrinth_train.target_position.x and currposition.y == labyrinth_train.target_position.y):
-            await cube.api.motor.motor_control(40, 0)
-            await asyncio.sleep(3)
-            await cube.api.motor.motor_control(0, 0)
+        if (currposition.x == currlabyrinth.target_position.x and currposition.y == currlabyrinth.target_position.y):
+            await cube.api.motor.motor_control_target(
+            timeout=70,
+            movement_type=MovementType.Linear,
+            speed=Speed(
+                max=10, speed_change_type=SpeedChangeType.Constant),
+            target=TargetPosition(
+                cube_location=CubeLocation(point=Point(x=newcoordinates[0], y=newcoordinates[1]), angle=neworientation.value),
+                rotation_option=RotationOption.AbsoluteOptimal,
+            ),
+            )
+            await cube.api.indicator.turn_on(green)
+            await cube.api.sound.play_sound_effect(9)
+
             return "Finished"
             
         return "Moved"
     
-    return "Can't Move"
+    return "No movement"
+
+
+"""
+    updating labyrinth challenge
+    <number>: puzzle number
+"""    
+@app.get("/puzzle/<number>")
+async def puzzle(number):
+    global cube
+    global currposition
+    global currorientation
+    global currlabyrinth
+     
+    if cube is None:
+        return "Cube not connected", 400
+    
+    match number:
+        case 1:
+            currlabyrinth = labyrinth_p1
+            currorientation = labyrinth_p1.initial_orientation
+        case 2:
+            currlabyrinth = labyrinth_p2
+            currorientation = labyrinth_p2.initial_orientation
+        case 3:
+            currlabyrinth = labyrinth_p3
+            currorientation = labyrinth_p3.initial_orientation
+        case 4:
+            currlabyrinth = labyrinth_p4
+            currorientation = labyrinth_p4.initial_orientation
+        case 5:
+            currlabyrinth = labyrinth_p5
+            currorientation = labyrinth_p5.initial_orientation
+        case 6:
+            currlabyrinth = labyrinth_p6
+            currorientation = labyrinth_p6.initial_orientation
+    
+    newcoordinates = get_coordinates(currlabyrinth.initial_position)
+    
+    await cube.api.motor.motor_control_target(
+        timeout=50,
+        movement_type=MovementType.Linear,
+        speed=Speed(
+            max=100, speed_change_type=SpeedChangeType.Constant),
+        target=TargetPosition(
+            cube_location=CubeLocation(point=Point(x=newcoordinates[0], y=newcoordinates[1]), angle=currorientation.value),
+            rotation_option=RotationOption.AbsoluteOptimal,
+        ),
+    )
+    
+    currposition = currlabyrinth.initial_position
+    currorientation = currlabyrinth.initial_orientation
+    print(currposition.x, currposition.y)
+    
+    return "Updated Puzzle"
+
 
 
 """
@@ -289,13 +389,28 @@ async def move(direction):
 @app.get("/dance")
 async def dance():
     global cube
+    global currposition
+    global currorientation
+    
     if cube is None:
         return "Cube not connected", 400
 
     await cube.api.motor.motor_control(40, 0)
     await asyncio.sleep(3)
-    await cube.api.motor.motor_control(0, 0)
+    
+    await cube.api.motor.motor_control_target(
+            timeout=70,
+            movement_type=MovementType.Linear,
+            speed=Speed(
+                max=10, speed_change_type=SpeedChangeType.Constant),
+            target=TargetPosition(
+                cube_location=CubeLocation(point=Point(x=currposition.x, y=currposition.y), angle=currorientation.value),
+                rotation_option=RotationOption.AbsoluteOptimal,
+            ),
+        )
+    
     return "Danced"
+
 
 """
     command for toio to read map coordinates
@@ -333,7 +448,7 @@ def check_position(position: Position) -> bool:
         return False
     if position.y < 0 or position.y > num_rows:
         return False
-    return labyrinth_train.matrix[position.y][position.x] == 1
+    return currlabyrinth.matrix[position.y][position.x] == 1
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
