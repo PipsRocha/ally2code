@@ -38,7 +38,7 @@
 	let playButAudio: HTMLAudioElement | undefined;
 	let leftAudio: HTMLAudioElement | undefined;
 	let rightAudio: HTMLAudioElement | undefined;
-	let forwardAudio: HTMLAudioElement | undefined;
+	let frontAudio: HTMLAudioElement | undefined;
 	let backwardAudio: HTMLAudioElement | undefined;
 	let danceAudio: HTMLAudioElement | undefined;
 	let speakAudio: HTMLAudioElement | undefined;
@@ -94,7 +94,7 @@
 
 		leftAudio = new Audio('/sounds/esquerda.wav');
 		rightAudio = new Audio('/sounds/direita.wav');
-		forwardAudio = new Audio('/sounds/frente.wav');
+		frontAudio = new Audio('/sounds/frente.wav');
 		backwardAudio = new Audio('/sounds/tras.wav');
 		danceAudio = new Audio('/sounds/dance_robot.wav');
 		speakAudio = new Audio('/sounds/robot_speak.wav');
@@ -136,7 +136,7 @@
 		if ('setSinkId' in HTMLAudioElement.prototype) {
 			leftAudio?.setSinkId(phonesId);
 			rightAudio?.setSinkId(phonesId);
-			forwardAudio?.setSinkId(phonesId);
+			frontAudio?.setSinkId(phonesId);
 			backwardAudio?.setSinkId(phonesId);
 			danceAudio?.setSinkId(phonesId);
 			speakAudio?.setSinkId(phonesId);
@@ -221,8 +221,8 @@
 			case 79:
 				audiocurr = blockLeft;
 				break;
-			case 'forward':
-				audiocurr = forwardAudio;
+			case 'front':
+				audiocurr = frontAudio;
 				break;
 			case 'backward':
 				audiocurr = backwardAudio;
@@ -253,17 +253,17 @@
 		for (let i = 0; i < topCodes.length+1; i++) {
 
 			if (topCodes[i] === 115 || topCodes[i] === 47) {
-				await Promise.all([playSounds('speak'), fetch(`http://${robotIP}/speak`)])
+				await Promise.all([playSounds('speak'), fetch(`http://${robotIP}/speak`)]);
 			} else if (topCodes[i] === 155 || topCodes[i] === 589) {
-				await Promise.all([playSounds('dance'), fetch(`http://${robotIP}/dance`)])
+				await Promise.all([playSounds('dance'), fetch(`http://${robotIP}/dance`)]);
 			} else if (topCodes[i] === 55 || topCodes[i] === 31) {
-				await Promise.all([playSounds('forward'), fetch(`http://${robotIP}/move/forward`)])
+				await Promise.all([playSounds('front'), fetch(`http://${robotIP}/move/front`)]);
 			} else if (topCodes[i] === 185 || topCodes[i] === 59) {
-				await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)])
+				await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);
 			} else if (topCodes[i] === 205 || topCodes[i] === 61) {
-				await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)])
+				await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);
 			} else if (topCodes[i] === 285 || topCodes[i] === 79) {
-				await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)])
+				await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);
 			}
 		}
 	}

@@ -18,7 +18,7 @@ app = Quart(__name__)
 app = cors(app, allow_origin="*")
 
 class Movement(Enum):
-    forward = 1
+    front = 1
     backward = 2
     left = 3
     right = 4
@@ -53,25 +53,25 @@ class Labyrinth:
 """
 moves = {
     Orientation.north: {
-        Movement.forward: PositionChange(0, -1, Orientation.north),
+        Movement.front: PositionChange(0, -1, Orientation.north),
         Movement.backward: PositionChange(0, 1, Orientation.south),
         Movement.left: PositionChange(-1, 0, Orientation.west),
         Movement.right: PositionChange(1, 0, Orientation.east)
     },
     Orientation.east: {
-        Movement.forward: PositionChange(1, 0, Orientation.east),
+        Movement.front: PositionChange(1, 0, Orientation.east),
         Movement.backward: PositionChange(-1, 0, Orientation.west),
         Movement.left: PositionChange(0, -1, Orientation.north),
         Movement.right: PositionChange(0, 1, Orientation.south)
     },
     Orientation.south: {
-        Movement.forward: PositionChange(0, 1, Orientation.south),
+        Movement.front: PositionChange(0, 1, Orientation.south),
         Movement.backward: PositionChange(0, -1, Orientation.north),
         Movement.left: PositionChange(1, 0, Orientation.east),
         Movement.right: PositionChange(-1, 0, Orientation.west)
     },
     Orientation.west: {
-        Movement.forward: PositionChange(-1, 0, Orientation.west),
+        Movement.front: PositionChange(-1, 0, Orientation.west),
         Movement.backward: PositionChange(1, 0, Orientation.east),
         Movement.left: PositionChange(0, 1, Orientation.south),
         Movement.right: PositionChange(0, -1, Orientation.north)
@@ -206,6 +206,11 @@ yellow = IndicatorParam(
     color= Color(r=255,g= 255,b=0)
 )
 
+purple = IndicatorParam(
+    duration_ms=0,
+    color= Color(r=238,g= 130,b=238)
+)
+
 """ labyrinth """
 global currlabyrinth
 currlabyrinth = Labyrinth
@@ -268,7 +273,7 @@ async def disconnect():
 
 """
     moving toio in four directions
-    <direction>: forward, backward, left, right
+    <direction>: front, backward, left, right
     x: left motor speed
     y: right motor speed
 """    
@@ -320,11 +325,14 @@ async def move(direction):
             )
             await cube.api.indicator.turn_on(green)
             await cube.api.sound.play_sound_effect(9)
-
-            return "Finished"
             
+            print("Finished")
+            return "Finished"
+        
+        print("Moved")  
         return "Moved"
     
+    print("No movement")
     return "No movement"
 
 
@@ -397,9 +405,13 @@ async def dance():
     
     if cube is None:
         return "Cube not connected", 400
-
-    await cube.api.motor.motor_control(40, 0)
+    
+    await cube.api.indicator.turn_on(purple)
+    await cube.api.sound.play_sound_effect(8, 100)
+    await cube.api.motor.motor_control(30, 0)
     await asyncio.sleep(3)
+    
+    newcoordinates = get_coordinates(currposition)
     
     await cube.api.motor.motor_control_target(
             timeout=70,
@@ -407,10 +419,11 @@ async def dance():
             speed=Speed(
                 max=10, speed_change_type=SpeedChangeType.Constant),
             target=TargetPosition(
-                cube_location=CubeLocation(point=Point(x=currposition.x, y=currposition.y), angle=currorientation.value),
+                cube_location=CubeLocation(point=Point(x=newcoordinates[0], y=newcoordinates[1]), angle=currorientation.value),
                 rotation_option=RotationOption.AbsoluteOptimal,
             ),
         )
+    await cube.api.indicator.turn_on(yellow)
     return "Danced"
 
 
