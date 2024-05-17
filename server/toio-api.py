@@ -116,8 +116,8 @@ labyrinth_train = Labyrinth(
 labyrinth_p1 = Labyrinth(
     matrix = [
         [0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 1, 1],
-        [0, 0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 1, 1, 0],
         [0, 0, 0, 0, 1, 0, 0]
     ],
@@ -168,8 +168,8 @@ labyrinth_p4 = Labyrinth(
 labyrinth_p5 = Labyrinth(
     matrix = [
         [0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 1, 1],
+        [0, 0, 1, 1, 1, 0, 1],
         [0, 0, 0, 0, 1, 0, 1],
         [0, 0, 0, 0, 1, 1, 1]
     ],
@@ -392,6 +392,25 @@ async def puzzle(name):
     
     return "Updated Puzzle"
 
+@app.get("/can_move/<direction>")
+async def can_move(direction):
+    global currposition
+    global currorientation
+    global currlabyrinth
+    
+    if direction not in Movement.__members__:
+        return "Invalid direction", 400
+    
+    movement = Movement[direction]
+    thechange = moves[currorientation][movement]
+    newpos = Position(currposition.x +thechange.x, currposition.y+thechange.y)
+    
+    can_move = check_position(newpos)
+    
+    if can_move:
+        return "cool", 200
+    else:
+        return "not cool", 400
 
 
 """

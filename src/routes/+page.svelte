@@ -247,22 +247,30 @@
 	}
 
 	async function play() {
-		
+		const topcodetoPlay = topCodes;
 		playButAudio?.play();
 
-		for (let i = 0; i < topCodes.length+1; i++) {
+		for (let i = 0; i < topcodetoPlay.length+1; i++) {
+			console.log(topCodes);
 
-			if (topCodes[i] === 115 || topCodes[i] === 47) {
-				await Promise.all([playSounds('speak'), fetch(`http://${robotIP}/speak`)]);
-			} else if (topCodes[i] === 155 || topCodes[i] === 589) {
+			if (topcodetoPlay[i] === 115 || topcodetoPlay[i] === 47) {
+				await playSounds('speak');
+			} else if (topcodetoPlay[i] === 155 || topcodetoPlay[i] === 589) {
 				await Promise.all([playSounds('dance'), fetch(`http://${robotIP}/dance`)]);
-			} else if (topCodes[i] === 55 || topCodes[i] === 31) {
-				await Promise.all([playSounds('front'), fetch(`http://${robotIP}/move/front`)]);
-			} else if (topCodes[i] === 185 || topCodes[i] === 59) {
+			} else if (topcodetoPlay[i] === 55 || topcodetoPlay[i] === 31) {
+				const res = await fetch(`http://${robotIP}/can_move/front`);
+				console.log(res);
+				if (res.ok) {
+					await Promise.all([playSounds('front'), fetch(`http://${robotIP}/move/front`)]);	
+				} else {
+					
+					console.log("NO");
+				}
+			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
 				await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);
-			} else if (topCodes[i] === 205 || topCodes[i] === 61) {
+			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
 				await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);
-			} else if (topCodes[i] === 285 || topCodes[i] === 79) {
+			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
 				await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);
 			}
 		}
