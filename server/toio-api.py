@@ -293,7 +293,7 @@ async def move(direction):
         newcoordinates = get_coordinates(newpos)
     
         await cube.api.motor.motor_control_target(
-            timeout=70,
+            timeout=50,
             movement_type=MovementType.Linear,
             speed=Speed(
                 max=10, speed_change_type=SpeedChangeType.Constant),
@@ -309,7 +309,7 @@ async def move(direction):
         
         if (currposition.x == currlabyrinth.target_position.x and currposition.y == currlabyrinth.target_position.y):
             await cube.api.motor.motor_control_target(
-            timeout=70,
+            timeout=50,
             movement_type=MovementType.Linear,
             speed=Speed(
                 max=10, speed_change_type=SpeedChangeType.Constant),
@@ -332,8 +332,8 @@ async def move(direction):
     updating labyrinth challenge
     <number>: puzzle number
 """    
-@app.get("/puzzle/<number>")
-async def puzzle(number):
+@app.get("/puzzle/<name>")
+async def puzzle(name):
     global cube
     global currposition
     global currorientation
@@ -342,23 +342,26 @@ async def puzzle(number):
     if cube is None:
         return "Cube not connected", 400
     
-    match number:
-        case 1:
+    match name:
+        case "labyrinth_train":
+            currlabyrinth = labyrinth_train
+            currorientation = labyrinth_train.initial_orientation
+        case "labyrinth_p1":
             currlabyrinth = labyrinth_p1
             currorientation = labyrinth_p1.initial_orientation
-        case 2:
+        case "labyrinth_p2":
             currlabyrinth = labyrinth_p2
             currorientation = labyrinth_p2.initial_orientation
-        case 3:
+        case "labyrinth_p3":
             currlabyrinth = labyrinth_p3
             currorientation = labyrinth_p3.initial_orientation
-        case 4:
+        case "labyrinth_p4":
             currlabyrinth = labyrinth_p4
             currorientation = labyrinth_p4.initial_orientation
-        case 5:
+        case "labyrinth_p5":
             currlabyrinth = labyrinth_p5
             currorientation = labyrinth_p5.initial_orientation
-        case 6:
+        case "labyrinth_p6":
             currlabyrinth = labyrinth_p6
             currorientation = labyrinth_p6.initial_orientation
     
@@ -408,34 +411,8 @@ async def dance():
                 rotation_option=RotationOption.AbsoluteOptimal,
             ),
         )
-    
     return "Danced"
 
-
-"""
-    command for toio to read map coordinates
-"""
-# @app.get("/position")
-async def position():
-    global cube
-    global currposition
-    if cube is None:
-        return "Cube not connected", 400
-    position = await cube.api.id_information.read()
-    print(position)
-    
-    currposition = [get_x(str(position)), get_y(str(position))]
-    
-    return currposition
-
-def get_x(position):
-    return (int(position[38:41]))
-    
-def get_y(position):
-    return (int(position[45:48]))
-
-def get_angle(position):
-    return (int(position[57:60]))
 
 def get_coordinates(pos):
     x = pos.x
@@ -444,6 +421,8 @@ def get_coordinates(pos):
     return mat[index]
     
 def check_position(position: Position) -> bool:
+    global currlabyrinth
+    
     if position.x < 0 or position.x > num_cols:
         return False
     if position.y < 0 or position.y > num_rows:

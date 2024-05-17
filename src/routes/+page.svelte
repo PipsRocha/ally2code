@@ -116,7 +116,7 @@
 		audiosInitialized = true;
 	}
 
-	function blocks_setSink(deviceId : string){
+	async function blocks_setSink(deviceId : string){
 		blockDancar?.setSinkId(deviceId);
 		blockRight?.setSinkId(deviceId);
 		blockLeft?.setSinkId(deviceId);
@@ -279,18 +279,14 @@
 
 	async function onDemand() {
 		console.log("ON DEMAND")
+		blocks_setSink(phonesId);
 		for (let i = 0; i < topCodes.length; i++) {
 			console.log(i);
 			console.log(topCodes[i]);
-			if(mode.value == 'private'){
-				blocks_setSink(phonesId);
-
-				await playSounds(topCodes[i]);
-
-				blocks_setSink(urbanistaId);
-			} else {
-				await playSounds(topCodes[i]);
-			}
+			await playSounds(topCodes[i]);
+		}
+		if(mode.value == 'private'){
+			blocks_setSink(urbanistaId);
 		}
 	}
 
@@ -317,7 +313,7 @@
 				</Select.Trigger>
 				<Select.Content>
 					{#each labyrinths as lab}
-						<Select.Item value={lab.value} label={lab.label}>{lab.label} </Select.Item>
+						<Select.Item value={lab.value} label={lab.label} on:click={() => fetch(`http://${robotIP}/puzzle/${lab.value}`)}> {lab.label} </Select.Item>
 					{/each}
 				</Select.Content>
 			</Select.Root>
