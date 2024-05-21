@@ -31,17 +31,21 @@
 
 	let topCodesModule: any;
 	let topCodes: number[] = [];
+	let lastTopcodes: number[] = [];
 
 	let audiocurr: HTMLAudioElement | undefined;
 
 	let topcodeAudio: HTMLAudioElement | undefined;
 	let playButAudio: HTMLAudioElement | undefined;
+	let outAudio: HTMLAudioElement | undefined;
+
 	let leftAudio: HTMLAudioElement | undefined;
 	let rightAudio: HTMLAudioElement | undefined;
 	let frontAudio: HTMLAudioElement | undefined;
 	let backwardAudio: HTMLAudioElement | undefined;
 	let danceAudio: HTMLAudioElement | undefined;
 	let speakAudio: HTMLAudioElement | undefined;
+	let noWayAudio: HTMLAudioElement | undefined;
 
 	let blockDancar: HTMLAudioElement | undefined;
 	let blockRight: HTMLAudioElement | undefined;
@@ -62,6 +66,85 @@
 	let urbanistaId = 'c85a0b94138e7a55dddb182f2b9bca9153c4b874b1e567e46c17a4edc2b0a951';
 	let phonesId = '20fbf631595a2899481151da2842a8a352b84700d52e318e51a4ceb1979efa67';
 	let jblId = "399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2";
+
+	function initializeAudios() {
+		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
+		playButAudio = new Audio('/sounds/lucky.wav');
+		outAudio = new Audio('/sounds/out_sound.wav');
+
+		leftAudio = new Audio('/sounds/andar_esquerda.wav');
+		rightAudio = new Audio('/sounds/andar_direita.wav');
+		frontAudio = new Audio('/sounds/andar_frente.wav');
+		backwardAudio = new Audio('/sounds/andar_tras.wav');
+		danceAudio = new Audio('/sounds/dance_robot.wav');
+		speakAudio = new Audio('/sounds/robot_speak.wav');
+		noWayAudio = new Audio('/sounds/sem_passagem.wav');
+
+		blockDancar = new Audio('/sounds/bloco_dancar.mp3');
+		blockRight = new Audio('/sounds/bloco_direita.mp3');
+		blockLeft = new Audio('/sounds/bloco_esquerda.mp3');
+		blockSpeak = new Audio('/sounds/bloco_falar.mp3');
+		blockForward = new Audio('/sounds/bloco_frente.mp3');
+		blockBack = new Audio('/sounds/bloco_tras.mp3');
+
+		blockDancarP2 = new Audio('/sounds/bloco_dancar_2.mp3');
+		blockRightP2 = new Audio('/sounds/bloco_direita_2.mp3');
+		blockLeftP2 = new Audio('/sounds/bloco_esquerda_2.mp3');
+		blockSpeakP2 = new Audio('/sounds/bloco_falar_2.mp3');
+		blockForwardP2 = new Audio('/sounds/bloco_frente_2.mp3');
+		blockBackP2 = new Audio('/sounds/bloco_tras_2.mp3');
+
+		audiosInitialized = true;
+	}
+
+	function blocks_setSink(deviceId : string){
+		blockDancar?.setSinkId(deviceId);
+		blockRight?.setSinkId(deviceId);
+		blockLeft?.setSinkId(deviceId);
+		blockSpeak?.setSinkId(deviceId);
+		blockForward?.setSinkId(deviceId);
+		blockBack?.setSinkId(deviceId);
+
+		blockDancarP2?.setSinkId(deviceId);
+		blockRightP2?.setSinkId(deviceId);
+		blockLeftP2?.setSinkId(deviceId);
+		blockSpeakP2?.setSinkId(deviceId);
+		blockForwardP2?.setSinkId(deviceId);
+		blockBackP2?.setSinkId(deviceId);
+	}
+
+	$: if (audiosInitialized) {
+		if ('setSinkId' in HTMLAudioElement.prototype) {
+			leftAudio?.setSinkId(phonesId);
+			rightAudio?.setSinkId(phonesId);
+			frontAudio?.setSinkId(phonesId);
+			backwardAudio?.setSinkId(phonesId);
+			danceAudio?.setSinkId(phonesId);
+			speakAudio?.setSinkId(phonesId);
+			noWayAudio?.setSinkId(phonesId);
+
+			playButAudio?.setSinkId(phonesId);
+			outAudio?.setSinkId(phonesId);
+			topcodeAudio?.setSinkId(phonesId);
+
+			switch (mode.value) {
+				case 'private':
+					playButAudio?.setSinkId(phonesId);
+					outAudio?.setSinkId(phonesId);
+					topcodeAudio?.setSinkId(phonesId);
+
+					blocks_setSink(urbanistaId);
+					break;
+				case 'shared':
+					playButAudio?.setSinkId(phonesId);
+					outAudio?.setSinkId(phonesId);
+					topcodeAudio?.setSinkId(phonesId);
+
+					blocks_setSink(phonesId);
+					break;
+			}
+		}
+	}
 
 	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
 		// enters pov
@@ -86,90 +169,23 @@
 				}
 			}
 		}
+		
 	}
 
-	function initializeAudios() {
-		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
-		playButAudio = new Audio('/sounds/lucky.wav');
-
-		leftAudio = new Audio('/sounds/esquerda.wav');
-		rightAudio = new Audio('/sounds/direita.wav');
-		frontAudio = new Audio('/sounds/frente.wav');
-		backwardAudio = new Audio('/sounds/tras.wav');
-		danceAudio = new Audio('/sounds/dance_robot.wav');
-		speakAudio = new Audio('/sounds/robot_speak.wav');
-
-		blockDancar = new Audio('/sounds/bloco_dancar.mp3');
-		blockRight = new Audio('/sounds/bloco_direita.mp3');
-		blockLeft = new Audio('/sounds/bloco_esquerda.mp3');
-		blockSpeak = new Audio('/sounds/bloco_falar.mp3');
-		blockForward = new Audio('/sounds/bloco_frente.mp3');
-		blockBack = new Audio('/sounds/bloco_tras.mp3');
-
-		blockDancarP2 = new Audio('/sounds/bloco_dancar_2.mp3');
-		blockRightP2 = new Audio('/sounds/bloco_direita_2.mp3');
-		blockLeftP2 = new Audio('/sounds/bloco_esquerda_2.mp3');
-		blockSpeakP2 = new Audio('/sounds/bloco_falar_2.mp3');
-		blockForwardP2 = new Audio('/sounds/bloco_frente_2.mp3');
-		blockBackP2 = new Audio('/sounds/bloco_tras_2.mp3');
-
-		audiosInitialized = true;
-	}
-
-	async function blocks_setSink(deviceId : string){
-		blockDancar?.setSinkId(deviceId);
-		blockRight?.setSinkId(deviceId);
-		blockLeft?.setSinkId(deviceId);
-		blockSpeak?.setSinkId(deviceId);
-		blockForward?.setSinkId(deviceId);
-		blockBack?.setSinkId(deviceId);
-
-		blockDancarP2?.setSinkId(deviceId);
-		blockRightP2?.setSinkId(deviceId);
-		blockLeftP2?.setSinkId(deviceId);
-		blockSpeakP2?.setSinkId(deviceId);
-		blockForwardP2?.setSinkId(deviceId);
-		blockBackP2?.setSinkId(deviceId);
-	}
-
-	$: if (audiosInitialized) {
-		if ('setSinkId' in HTMLAudioElement.prototype) {
-			leftAudio?.setSinkId(phonesId);
-			rightAudio?.setSinkId(phonesId);
-			frontAudio?.setSinkId(phonesId);
-			backwardAudio?.setSinkId(phonesId);
-			danceAudio?.setSinkId(phonesId);
-			speakAudio?.setSinkId(phonesId);
-
-			playButAudio?.setSinkId(phonesId);
-
-			switch (mode.value) {
-				case 'no-awareness':
-					topcodeAudio?.setSinkId(phonesId);					
-					break;
-				case 'private':
-					topcodeAudio?.setSinkId(phonesId);
-					blocks_setSink(urbanistaId);
-					break;
-				case 'shared':
-					blocks_setSink(phonesId);
-					break;
-			}
-		}
-	}
 
 	let lastExecutionTime = 0;
 	onMount(async () => {
-		//navigator.mediaDevices.getUserMedia({ audio: true });
 		initializeAudios();
 
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
 		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
 			const currentTime = Date.now();
-			if (currentTime - lastExecutionTime >= 1500) {
+
+			if (currentTime - lastExecutionTime >= 1000) {
 				var json = JSON.parse(jsonString);
 				const newTopCodes = json.topcodes.map((c: any) => c.code);
+				
 				if (notEqualsCheck(topCodes, newTopCodes)) {
 					const oldTopCodes = topCodes;
 					topCodes = newTopCodes;
@@ -239,6 +255,9 @@
 			case 'speak':
 				audiocurr = speakAudio;
 				break;
+			case 'noway':
+				audiocurr = noWayAudio;
+				break;
 		}
 
 		if (audiocurr) {
@@ -264,14 +283,35 @@
 					await Promise.all([playSounds('front'), fetch(`http://${robotIP}/move/front`)]);	
 				} else {
 					
-					console.log("NO");
+					playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
-				await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);
+				const res = await fetch(`http://${robotIP}/move/backward`);
+				console.log(res);
+				if (res.ok) {
+					await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);	
+				} else {
+					
+					playSounds('noway');
+				}
 			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
-				await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);
+				const res = await fetch(`http://${robotIP}/move/right`);
+				console.log(res);
+				if (res.ok) {
+					await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);	
+				} else {
+					
+					playSounds('noway');
+				}
 			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
-				await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);
+				const res = await fetch(`http://${robotIP}/move/left`);
+				console.log(res);
+				if (res.ok) {
+					await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);	
+				} else {
+					
+					playSounds('noway');
+				}
 			}
 		}
 	}
@@ -298,7 +338,18 @@
 		}
 	}
 
+	async function handlekey(e) {
+		console.log("HHHHHHHHHHH-1");
+	
+		if (e.keyCode == 80){
+			console.log("HHHHHHHHHHH-2");
+			play();
+		}
+    }
+
 </script>
+
+<svelte:window on:keydown|preventDefault={handlekey} />
 
 <div class="flex h-full flex-col">
 	<div class="container flex h-16 flex-row items-center justify-between py-4">
@@ -328,7 +379,8 @@
 			<Input class="w-48" bind:value={robotIP} placeholder="192.168.1.1" />
 			<Button on:click={checkOutputs}>Devices</Button>
 			<Button on:click={onDemand}>On Demand</Button>
-			<Button on:click={play}>PLAY</Button>
+			<!-- <Button on:keydown={handlekey}>PLAY</Button> -->
+			
 		</div>
 	</div>
 	<Separator />
