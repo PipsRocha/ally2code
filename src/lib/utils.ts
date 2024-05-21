@@ -66,3 +66,7 @@ export function playAudio(audio: HTMLAudioElement) {
 export function notEqualsCheck(a: number[], b: number[]) {
 	return JSON.stringify(a) !== JSON.stringify(b);
 }
+
+export function equalsCheck(a: number[], b: number[]) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}

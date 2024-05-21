@@ -36,7 +36,7 @@
 	let audiocurr: HTMLAudioElement | undefined;
 
 	let topcodeAudio: HTMLAudioElement | undefined;
-	let playButAudio: HTMLAudioElement | undefined;
+	//let playButAudio: HTMLAudioElement | undefined;
 	let outAudio: HTMLAudioElement | undefined;
 
 	let leftAudio: HTMLAudioElement | undefined;
@@ -69,7 +69,7 @@
 
 	function initializeAudios() {
 		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
-		playButAudio = new Audio('/sounds/lucky.wav');
+		//playButAudio = new Audio('/sounds/lucky.wav');
 		outAudio = new Audio('/sounds/out_sound.wav');
 
 		leftAudio = new Audio('/sounds/andar_esquerda.wav');
@@ -123,20 +123,20 @@
 			speakAudio?.setSinkId(phonesId);
 			noWayAudio?.setSinkId(phonesId);
 
-			playButAudio?.setSinkId(phonesId);
+			//playButAudio?.setSinkId(phonesId);
 			outAudio?.setSinkId(phonesId);
 			topcodeAudio?.setSinkId(phonesId);
 
 			switch (mode.value) {
 				case 'private':
-					playButAudio?.setSinkId(phonesId);
+					//playButAudio?.setSinkId(phonesId);
 					outAudio?.setSinkId(phonesId);
 					topcodeAudio?.setSinkId(phonesId);
 
 					blocks_setSink(urbanistaId);
 					break;
 				case 'shared':
-					playButAudio?.setSinkId(phonesId);
+					//playButAudio?.setSinkId(phonesId);
 					outAudio?.setSinkId(phonesId);
 					topcodeAudio?.setSinkId(phonesId);
 
@@ -148,28 +148,58 @@
 
 	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
 		// enters pov
-		if (mode.value === 'no-awareness') {
-			topcodeAudio?.play();
-			console.log('in noA');
-		} else {
-			const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
-			for (let i = 0; i < addedTopCodes.length; i++) {
-				console.log(mode.value);
-				if (mode.value === 'private') {
-					console.log('in PRIVATE');
-					if (addedTopCodes[i] % 5 === 0) {
-						topcodeAudio?.play();
-						await playSounds(addedTopCodes[i]);
-					} else {
-						await playSounds(addedTopCodes[i]);
-					}
-				} else if (mode.value === 'shared') {
-					await playSounds(addedTopCodes[i]);
-					console.log('in shared');
+
+		//const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
+
+		const addedTopCodes = [];
+		if (topcodes.length < oldTopCodes.length){
+			outAudio?.play();
+
+			for (let i = 0; i < topcodes.length; i++) {
+				if(oldTopCodes[i] != topcodes[i]){
+					addedTopCodes.push(topcodes[i]);
+				}
+			} //playSounds(addedTopCodes);
+
+		} else if (topcodes.length == oldTopCodes.length){
+			// Diferent elements
+			if (!(JSON.stringify(topcodes) === JSON.stringify(oldTopCodes))){
+				outAudio?.play();
+			}
+			for (let i = 0; i < topcodes.length; i++) {
+				if(oldTopCodes[i] != topcodes[i]){
+					addedTopCodes.push(topcodes[i]);
 				}
 			}
+		} else {
+			topcodeAudio?.play();
+			let i
+			for (i = 0; i < oldTopCodes.length; i++) {
+				if(oldTopCodes[i] != topcodes[i]){
+					addedTopCodes.push(topcodes[i]);
+				}
+			} for (let l =i+1; l < topcodes.length; l++) {
+				addedTopCodes.push(topcodes[l]);
+			}
 		}
-		
+
+		// if(array1.sort().join(',')=== array2.sort().join(',')){
+    	//alert('same members');
+		//}
+		//else alert('not a match');
+
+		for (let i = 0; i < addedTopCodes.length; i++) {
+			console.log(mode.value);
+
+			if (mode.value === 'no-awareness') {
+				topcodeAudio?.play();
+			} else {
+				console.log(mode.value);
+				topcodeAudio?.play();
+				await playSounds(addedTopCodes[i]);
+				
+			}
+		}
 	}
 
 
@@ -267,7 +297,7 @@
 
 	async function play() {
 		const topcodetoPlay = topCodes;
-		playButAudio?.play();
+		//playButAudio?.play();
 
 		for (let i = 0; i < topcodetoPlay.length+1; i++) {
 			console.log(topCodes);
@@ -345,6 +375,10 @@
 			console.log("HHHHHHHHHHH-2");
 			play();
 		}
+		if (e.keyCode == 79){
+			console.log("HHHHHHHHHHH-2");
+			onDemand();
+		}
     }
 
 </script>
@@ -378,8 +412,8 @@
 			</Select.Root>
 			<Input class="w-48" bind:value={robotIP} placeholder="192.168.1.1" />
 			<Button on:click={checkOutputs}>Devices</Button>
-			<Button on:click={onDemand}>On Demand</Button>
-			<!-- <Button on:keydown={handlekey}>PLAY</Button> -->
+			<!-- <Button on:click={onDemand}>On Demand</Button>
+			<Button on:click={play}>PLAY</Button> -->
 			
 		</div>
 	</div>
