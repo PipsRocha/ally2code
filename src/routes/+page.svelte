@@ -36,7 +36,7 @@
 	let audiocurr: HTMLAudioElement | undefined;
 
 	let topcodeAudio: HTMLAudioElement | undefined;
-	//let playButAudio: HTMLAudioElement | undefined;
+	let playButAudio: HTMLAudioElement | undefined;
 	let outAudio: HTMLAudioElement | undefined;
 
 	let leftAudio: HTMLAudioElement | undefined;
@@ -69,7 +69,7 @@
 
 	function initializeAudios() {
 		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
-		//playButAudio = new Audio('/sounds/lucky.wav');
+		playButAudio = new Audio('/sounds/lucky.wav');
 		outAudio = new Audio('/sounds/out_sound.wav');
 
 		leftAudio = new Audio('/sounds/andar_esquerda.wav');
@@ -111,44 +111,45 @@
 		blockSpeakP2?.setSinkId(deviceId);
 		blockForwardP2?.setSinkId(deviceId);
 		blockBackP2?.setSinkId(deviceId);
+
+		leftAudio?.setSinkId(deviceId);
+		rightAudio?.setSinkId(deviceId);
+		frontAudio?.setSinkId(deviceId);
+		backwardAudio?.setSinkId(deviceId);
+		danceAudio?.setSinkId(deviceId);
+		speakAudio?.setSinkId(deviceId);
+		noWayAudio?.setSinkId(deviceId);
 	}
 
 	$: if (audiosInitialized) {
 		if ('setSinkId' in HTMLAudioElement.prototype) {
-			leftAudio?.setSinkId(phonesId);
-			rightAudio?.setSinkId(phonesId);
-			frontAudio?.setSinkId(phonesId);
-			backwardAudio?.setSinkId(phonesId);
-			danceAudio?.setSinkId(phonesId);
-			speakAudio?.setSinkId(phonesId);
-			noWayAudio?.setSinkId(phonesId);
 
-			//playButAudio?.setSinkId(phonesId);
-			outAudio?.setSinkId(phonesId);
-			topcodeAudio?.setSinkId(phonesId);
+			playButAudio?.setSinkId(phonesId);
+			outAudio?.setSinkId(jblId);
+			topcodeAudio?.setSinkId(jblId);
 
 			switch (mode.value) {
 				case 'no-awareness':
-					outAudio?.setSinkId(phonesId);
-					topcodeAudio?.setSinkId(phonesId);
+					outAudio?.setSinkId(jblId);
+					topcodeAudio?.setSinkId(jblId);
 					break;
 				case 'private':
 					//playButAudio?.setSinkId(phonesId);
-					outAudio?.setSinkId(phonesId);
-					topcodeAudio?.setSinkId(phonesId);
+					outAudio?.setSinkId(jblId);
+					topcodeAudio?.setSinkId(jblId);
 
 					blocks_setSink(urbanistaId);
 					break;
 				case 'shared':
 					//playButAudio?.setSinkId(phonesId);
-					outAudio?.setSinkId(phonesId);
-					topcodeAudio?.setSinkId(phonesId);
+					outAudio?.setSinkId(jblId);
+					topcodeAudio?.setSinkId(jblId);
 
-					blocks_setSink(phonesId);
+					blocks_setSink(jblId);
 					break;
+				}
 			}
 		}
-	}
 
 	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
 		
@@ -165,7 +166,7 @@
 			if (oldTopCodes.length > topcodes.length){
 				outAudio?.play();
 			}
-			
+
 			const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
 			//const removedTopCodes = oldTopCodes.filter((code) => !topcodes.includes(code)); // not used for now
 			
@@ -187,7 +188,7 @@
 		topCodesModule = TopCodes;
 		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
 			const currentTime = Date.now();
-			if (currentTime - lastExecutionTime >= 1500) {
+			if (currentTime - lastExecutionTime >= 900) {
 				var json = JSON.parse(jsonString);
 				const newTopCodes = json.topcodes.map((c: any) => c.code);
 
@@ -283,11 +284,12 @@
 
 	async function play() {
 		const topcodetoPlay = topCodes;
-		//playButAudio?.play();
+		playButAudio?.play();
 
 		for (let i = 0; i < topcodetoPlay.length+1; i++) {
 			console.log(topCodes);
 
+			const toPlay = []; 
 			if (topcodetoPlay[i] === 115 || topcodetoPlay[i] === 47) {
 				await playSounds('speak');
 			} else if (topcodetoPlay[i] === 155 || topcodetoPlay[i] === 589) {
@@ -295,38 +297,38 @@
 			} else if (topcodetoPlay[i] === 55 || topcodetoPlay[i] === 31) {
 				const res = await fetch(`http://${robotIP}/can_move/front`);
 				console.log(res);
-				if (res.ok) {
+				if (res.status == 200) {
 					await Promise.all([playSounds('front'), fetch(`http://${robotIP}/move/front`)]);	
 				} else {
 					
-					playSounds('noway');
+					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
 				const res = await fetch(`http://${robotIP}/move/backward`);
 				console.log(res);
-				if (res.ok) {
+				if (res.status == 200) {
 					await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);	
 				} else {
 					
-					playSounds('noway');
+					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
 				const res = await fetch(`http://${robotIP}/move/right`);
 				console.log(res);
-				if (res.ok) {
+				if (res.status == 200) {
 					await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);	
 				} else {
 					
-					playSounds('noway');
+					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
 				const res = await fetch(`http://${robotIP}/move/left`);
 				console.log(res);
-				if (res.ok) {
+				if (res.status == 200) {
 					await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);	
 				} else {
 					
-					playSounds('noway');
+					await playSounds('noway');
 				}
 			}
 		}
@@ -342,15 +344,11 @@
 	}
 
 	async function onDemand() {
-		console.log("ON DEMAND")
-		blocks_setSink(phonesId);
+		console.log("ON DEMAND");
 		for (let i = 0; i < topCodes.length; i++) {
 			console.log(i);
 			console.log(topCodes[i]);
 			await playSounds(topCodes[i]);
-		}
-		if(mode.value == 'private'){
-			blocks_setSink(urbanistaId);
 		}
 	}
 
