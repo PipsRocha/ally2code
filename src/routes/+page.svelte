@@ -5,7 +5,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import type { Mode } from '$lib/types';
 	import type { Labyrinth } from '$lib/types';
-	import { notEqualsCheck, playAudio } from '$lib/utils';
+	import { equalsCheck, notEqualsCheck, playAudio } from '$lib/utils';
 	import { onMount } from 'svelte';
 
 	const modes: { label: string; value: Mode }[] = [
@@ -31,7 +31,7 @@
 
 	let topCodesModule: any;
 	let topCodes: number[] = [];
-	let lastTopcodes: number[] = [];
+	let tempTopCodes: number[] | null = null;
 
 	let audiocurr: HTMLAudioElement | undefined;
 
@@ -128,6 +128,10 @@
 			topcodeAudio?.setSinkId(phonesId);
 
 			switch (mode.value) {
+				case 'no-awareness':
+					outAudio?.setSinkId(phonesId);
+					topcodeAudio?.setSinkId(phonesId);
+					break;
 				case 'private':
 					//playButAudio?.setSinkId(phonesId);
 					outAudio?.setSinkId(phonesId);
@@ -147,57 +151,28 @@
 	}
 
 	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
+		
 		// enters pov
-
-		//const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
-
-		const addedTopCodes = [];
-		if (topcodes.length < oldTopCodes.length){
-			outAudio?.play();
-
-			for (let i = 0; i < topcodes.length; i++) {
-				if(oldTopCodes[i] != topcodes[i]){
-					addedTopCodes.push(topcodes[i]);
-				}
-			} //playSounds(addedTopCodes);
-
-		} else if (topcodes.length == oldTopCodes.length){
-			// Diferent elements
-			if (!(JSON.stringify(topcodes) === JSON.stringify(oldTopCodes))){
+		if (mode.value === 'no-awareness') {
+			if (oldTopCodes.length > topcodes.length){
 				outAudio?.play();
-			}
-			for (let i = 0; i < topcodes.length; i++) {
-				if(oldTopCodes[i] != topcodes[i]){
-					addedTopCodes.push(topcodes[i]);
-				}
-			}
 		} else {
 			topcodeAudio?.play();
-			let i
-			for (i = 0; i < oldTopCodes.length; i++) {
-				if(oldTopCodes[i] != topcodes[i]){
-					addedTopCodes.push(topcodes[i]);
-				}
-			} for (let l =i+1; l < topcodes.length; l++) {
-				addedTopCodes.push(topcodes[l]);
-			}
+			console.log('in noA');
 		}
-
-		// if(array1.sort().join(',')=== array2.sort().join(',')){
-    	//alert('same members');
-		//}
-		//else alert('not a match');
-
-		for (let i = 0; i < addedTopCodes.length; i++) {
-			console.log(mode.value);
-
-			if (mode.value === 'no-awareness') {
-				topcodeAudio?.play();
-			} else {
+		
+		} else {
+			if (oldTopCodes.length > topcodes.length){
+				outAudio?.play();
+			}
+			
+			const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
+			//const removedTopCodes = oldTopCodes.filter((code) => !topcodes.includes(code)); // not used for now
+			
+			for (let i = 0; i < addedTopCodes.length; i++) {
 				console.log(mode.value);
 				topcodeAudio?.play();
 				await playSounds(addedTopCodes[i]);
-				
 			}
 		}
 	}
@@ -205,28 +180,39 @@
 
 	let lastExecutionTime = 0;
 	onMount(async () => {
+		//navigator.mediaDevices.getUserMedia({ audio: true });
 		initializeAudios();
 
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
 		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
 			const currentTime = Date.now();
-
-			if (currentTime - lastExecutionTime >= 1000) {
+			if (currentTime - lastExecutionTime >= 1500) {
 				var json = JSON.parse(jsonString);
 				const newTopCodes = json.topcodes.map((c: any) => c.code);
-				
-				if (notEqualsCheck(topCodes, newTopCodes)) {
+
+				// If the topcodes are the same as in the previous "frame" and
+				// they are different from the previous topcodes, process them
+				if (
+					tempTopCodes &&
+					equalsCheck(tempTopCodes, newTopCodes) &&
+					notEqualsCheck(topCodes, newTopCodes)
+				) {
 					const oldTopCodes = topCodes;
 					topCodes = newTopCodes;
+					tempTopCodes = null;
 					processTopCodes(topCodes, oldTopCodes);
+				} else {
+					tempTopCodes = newTopCodes;
 				}
+
 				// Update the last execution time
 				lastExecutionTime = currentTime;
 			}
 		});
 		topCodesModule.startStopVideoScan('video-canvas');
 	});
+
 
 	// shared actions and pings
 	async function playSounds(code: number | string) {
@@ -368,7 +354,7 @@
 		}
 	}
 
-	async function handlekey(e) {
+	async function handlekey(e: any) {
 		console.log("HHHHHHHHHHH-1");
 	
 		if (e.keyCode == 80){
