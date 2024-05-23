@@ -304,7 +304,7 @@
 					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
-				const res = await fetch(`http://${robotIP}/move/backward`);
+				const res = await fetch(`http://${robotIP}/can_move/backward`);
 				console.log(res);
 				if (res.status == 200) {
 					await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);	
@@ -313,7 +313,7 @@
 					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
-				const res = await fetch(`http://${robotIP}/move/right`);
+				const res = await fetch(`http://${robotIP}/can_move/right`);
 				console.log(res);
 				if (res.status == 200) {
 					await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);	
@@ -322,7 +322,7 @@
 					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
-				const res = await fetch(`http://${robotIP}/move/left`);
+				const res = await fetch(`http://${robotIP}/can_move/left`);
 				console.log(res);
 				if (res.status == 200) {
 					await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);	
