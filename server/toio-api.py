@@ -324,7 +324,7 @@ async def move(direction):
             ),
             )
             await cube.api.indicator.turn_on(green)
-            await cube.api.sound.play_sound_effect(9)
+            #await cube.api.sound.play_sound_effect(9)
             
             print("Finished")
             return "Finished"
@@ -426,7 +426,7 @@ async def dance():
         return "Cube not connected", 400
     
     await cube.api.indicator.turn_on(purple)
-    await cube.api.sound.play_sound_effect(8, 100)
+    #await cube.api.sound.play_sound_effect(8, 100)
     await cube.api.motor.motor_control(30, 0)
     await asyncio.sleep(3)
     
@@ -444,6 +444,22 @@ async def dance():
         )
     await cube.api.indicator.turn_on(yellow)
     return "Danced"
+
+"""
+    command for toio to dance, movement and 8-bit sounds
+"""
+@app.get("/updatePosition")
+async def updatePosition():
+    global cube
+    global currposition
+    global currorientation
+    
+    if cube is None:
+        return "Cube not connected", 400
+    
+    newcoordinates = get_coordinates(currposition)
+
+    return "Position Updated"
 
 
 def get_coordinates(pos):

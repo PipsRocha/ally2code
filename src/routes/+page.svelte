@@ -45,7 +45,9 @@
 	let backwardAudio: HTMLAudioElement | undefined;
 	let danceAudio: HTMLAudioElement | undefined;
 	let speakAudio: HTMLAudioElement | undefined;
+
 	let noWayAudio: HTMLAudioElement | undefined;
+	let movedRobotAudio: HTMLAudioElement | undefined;
 
 	let blockDancar: HTMLAudioElement | undefined;
 	let blockRight: HTMLAudioElement | undefined;
@@ -63,9 +65,9 @@
 
 	let audiosInitialized: boolean = false;
 
-	let urbanistaId = 'c85a0b94138e7a55dddb182f2b9bca9153c4b874b1e567e46c17a4edc2b0a951';
+	let urbanistaId = '0a6e25655fa648897a183653ee814653530be0d2018f4c3f02c7c0d50694e1ed';
 	let phonesId = '20fbf631595a2899481151da2842a8a352b84700d52e318e51a4ceb1979efa67';
-	let jblId = "399953c8604d26bb8193f9ca003da9ca9242da85f6dfcdf303bcffa34d604ac2";
+	let jblId = "c41bdeb97eafb951a9d854d52ddb17bccd5967a3c9ab706c66161490fd33e6b9";
 
 	function initializeAudios() {
 		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
@@ -78,7 +80,9 @@
 		backwardAudio = new Audio('/sounds/andar_tras.wav');
 		danceAudio = new Audio('/sounds/dance_robot.wav');
 		speakAudio = new Audio('/sounds/robot_speak.wav');
+
 		noWayAudio = new Audio('/sounds/sem_passagem.wav');
+		movedRobotAudio = new Audio(''); // TO DO
 
 		blockDancar = new Audio('/sounds/bloco_dancar.mp3');
 		blockRight = new Audio('/sounds/bloco_direita.mp3');
@@ -116,27 +120,29 @@
 		rightAudio?.setSinkId(deviceId);
 		frontAudio?.setSinkId(deviceId);
 		backwardAudio?.setSinkId(deviceId);
-		danceAudio?.setSinkId(deviceId);
-		speakAudio?.setSinkId(deviceId);
+
 		noWayAudio?.setSinkId(deviceId);
+		movedRobotAudio?.setSinkId(deviceId);
 	}
 
 	$: if (audiosInitialized) {
 		if ('setSinkId' in HTMLAudioElement.prototype) {
-
-			playButAudio?.setSinkId(phonesId);
-			outAudio?.setSinkId(jblId);
-			topcodeAudio?.setSinkId(jblId);
-
 			switch (mode.value) {
 				case 'no-awareness':
 					outAudio?.setSinkId(jblId);
 					topcodeAudio?.setSinkId(jblId);
+					playButAudio?.setSinkId(jblId);
+				
+					danceAudio?.setSinkId(jblId);
+					speakAudio?.setSinkId(jblId);
 					break;
 				case 'private':
 					//playButAudio?.setSinkId(phonesId);
 					outAudio?.setSinkId(jblId);
 					topcodeAudio?.setSinkId(jblId);
+
+					danceAudio?.setSinkId(jblId);
+					speakAudio?.setSinkId(jblId);
 
 					blocks_setSink(urbanistaId);
 					break;
@@ -275,6 +281,9 @@
 			case 'noway':
 				audiocurr = noWayAudio;
 				break;
+			case 'movedme':
+			audiocurr = movedRobotAudio;
+			break;
 		}
 
 		if (audiocurr) {
@@ -283,13 +292,29 @@
 	}
 
 	async function play() {
+		console.log(topCodes);
 		const topcodetoPlay = topCodes;
 		playButAudio?.play();
 
-		for (let i = 0; i < topcodetoPlay.length+1; i++) {
-			console.log(topCodes);
+		if (mode.value === 'no-awareness') {
+			for (let i = 0; i < topcodetoPlay.length+1; i++) {
+			if (topcodetoPlay[i] === 115 || topcodetoPlay[i] === 47) {
+				await playSounds('speak');
+			} else if (topcodetoPlay[i] === 155 || topcodetoPlay[i] === 589) {
+				await Promise.all([playSounds('dance'), fetch(`http://${robotIP}/dance`)]);
+			} else if (topcodetoPlay[i] === 55 || topcodetoPlay[i] === 31) {
+				fetch(`http://${robotIP}/move/front`);
+			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
+				fetch(`http://${robotIP}/move/backward`);
+			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
+				fetch(`http://${robotIP}/move/right`);
+			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
+				fetch(`http://${robotIP}/move/left`);
+			}
+		}
 
-			const toPlay = []; 
+		} else {
+			for (let i = 0; i < topcodetoPlay.length+1; i++) {
 			if (topcodetoPlay[i] === 115 || topcodetoPlay[i] === 47) {
 				await playSounds('speak');
 			} else if (topcodetoPlay[i] === 155 || topcodetoPlay[i] === 589) {
@@ -300,7 +325,6 @@
 				if (res.status == 200) {
 					await Promise.all([playSounds('front'), fetch(`http://${robotIP}/move/front`)]);	
 				} else {
-					
 					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
@@ -309,7 +333,6 @@
 				if (res.status == 200) {
 					await Promise.all([playSounds('backward'), fetch(`http://${robotIP}/move/backward`)]);	
 				} else {
-					
 					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
@@ -318,7 +341,6 @@
 				if (res.status == 200) {
 					await Promise.all([playSounds('right'), fetch(`http://${robotIP}/move/right`)]);	
 				} else {
-					
 					await playSounds('noway');
 				}
 			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
@@ -327,10 +349,11 @@
 				if (res.status == 200) {
 					await Promise.all([playSounds('left'), fetch(`http://${robotIP}/move/left`)]);	
 				} else {
-					
 					await playSounds('noway');
 				}
 			}
+		}
+
 		}
 	}
 
@@ -352,16 +375,25 @@
 		}
 	}
 
+	async function updateRobotPosition() {
+		fetch(`http://${robotIP}/updatePosition`);
+	}
+
 	async function handlekey(e: any) {
-		console.log("HHHHHHHHHHH-1");
-	
-		if (e.keyCode == 80){
-			console.log("HHHHHHHHHHH-2");
+		if (e.keyCode == 80){ //p
+			console.log("Play Button");
 			play();
 		}
-		if (e.keyCode == 79){
-			console.log("HHHHHHHHHHH-2");
+		if (e.keyCode == 68){ //d
+			console.log("On Demand Button");
 			onDemand();
+		}
+		if (e.keyCode == 77){ //m
+			console.log("Moved Robot");
+			await playSounds("movedme");
+		}
+		if (e.keyCode == 85){ //u
+			updateRobotPosition();
 		}
     }
 
