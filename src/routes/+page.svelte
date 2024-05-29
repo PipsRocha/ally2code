@@ -65,8 +65,8 @@
 
 	let audiosInitialized: boolean = false;
 
-	let urbanistaId = '0a6e25655fa648897a183653ee814653530be0d2018f4c3f02c7c0d50694e1ed';
-	let phonesId = '20fbf631595a2899481151da2842a8a352b84700d52e318e51a4ceb1979efa67';
+	let urbanistaId = '280b4fbfb31642d18d1e54bcc4345b5931b536bf15ea34032dee6eb687170465';
+	let phonesId = '896d463865081909d2d47b0756ad0717d3f0d8c64181f6febffc7ac98739a27d';
 	let jblId = "c41bdeb97eafb951a9d854d52ddb17bccd5967a3c9ab706c66161490fd33e6b9";
 
 	function initializeAudios() {
@@ -82,7 +82,7 @@
 		speakAudio = new Audio('/sounds/robot_speak.wav');
 
 		noWayAudio = new Audio('/sounds/sem_passagem.wav');
-		movedRobotAudio = new Audio(''); // TO DO
+		movedRobotAudio = new Audio('/sounds/not_here.wav');
 
 		blockDancar = new Audio('/sounds/bloco_dancar.mp3');
 		blockRight = new Audio('/sounds/bloco_direita.mp3');
@@ -376,7 +376,7 @@
 	}
 
 	async function updateRobotPosition() {
-		fetch(`http://${robotIP}/updatePosition`);
+		fetch(`http://${robotIP}/recover_position`);
 	}
 
 	async function handlekey(e: any) {
