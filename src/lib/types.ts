@@ -10,6 +10,8 @@ export type Mode = 'no-awareness' | 'private' | 'shared';
 
 export type RobotType = 'toio' | 'microbit' | 'dash';
 
+export type RobotConnectionState = 'connected' | 'disconnected';
+
 export type Position = {
 	x: number;
 	y: number;
@@ -19,30 +21,33 @@ export type Movement = 'forward' | 'backward' | 'left' | 'right';
 
 export type Orientation = 'north' | 'east' | 'south' | 'west';
 
-export const moves: Record<Orientation, Record<Movement, Position>> = {
+export const moves: Record<
+	Orientation,
+	Record<Movement, Position & { orientation: Orientation }>
+> = {
 	north: {
-		forward: { x: 0, y: -1 },
-		backward: { x: 0, y: 1 },
-		left: { x: -1, y: 0 },
-		right: { x: 1, y: 0 }
+		forward: { x: 0, y: -1, orientation: 'north' },
+		backward: { x: 0, y: 1, orientation: 'south' },
+		left: { x: -1, y: 0, orientation: 'west' },
+		right: { x: 1, y: 0, orientation: 'east' }
 	},
 	east: {
-		forward: { x: 1, y: 0 },
-		backward: { x: -1, y: 0 },
-		left: { x: 0, y: -1 },
-		right: { x: 0, y: 1 }
+		forward: { x: 1, y: 0, orientation: 'east' },
+		backward: { x: -1, y: 0, orientation: 'west' },
+		left: { x: 0, y: -1, orientation: 'north' },
+		right: { x: 0, y: 1, orientation: 'south' }
 	},
 	south: {
-		forward: { x: 0, y: 1 },
-		backward: { x: 0, y: -1 },
-		left: { x: 1, y: 0 },
-		right: { x: -1, y: 0 }
+		forward: { x: 0, y: 1, orientation: 'south' },
+		backward: { x: 0, y: -1, orientation: 'north' },
+		left: { x: 1, y: 0, orientation: 'east' },
+		right: { x: -1, y: 0, orientation: 'west' }
 	},
 	west: {
-		forward: { x: -1, y: 0 },
-		backward: { x: 1, y: 0 },
-		left: { x: 0, y: 1 },
-		right: { x: 0, y: -1 }
+		forward: { x: -1, y: 0, orientation: 'west' },
+		backward: { x: 1, y: 0, orientation: 'east' },
+		left: { x: 0, y: 1, orientation: 'south' },
+		right: { x: 0, y: -1, orientation: 'north' }
 	}
 };
 
@@ -51,4 +56,11 @@ export type Labyrinth = {
 	initialPosition: Position;
 	initialOrientation: Orientation;
 	targetPosition: Position;
+};
+
+export type Log = {
+	robot: RobotType;
+	mode: Mode;
+	timestamp: number;
+	message: string;
 };

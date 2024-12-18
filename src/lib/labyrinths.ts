@@ -3,11 +3,11 @@ import type { Labyrinth } from './types';
 export const labyrinths: Record<string, Labyrinth> = {
 	labyrinth_train: {
 		matrix: [
-			[1, 1, 1, 1, 1],
-			[1, 0, 0, 0, 1],
-			[1, 0, 1, 0, 1],
-			[1, 0, 0, 0, 1],
-			[1, 1, 1, 1, 1]
+			[0, 0, 0, 1, 0, 0, 0],
+			[0, 0, 0, 1, 0, 0, 0],
+			[0, 0, 0, 1, 0, 0, 0],
+			[0, 0, 0, 1, 1, 1, 1],
+			[0, 0, 0, 0, 0, 0, 1]
 		],
 		initialPosition: { x: 6, y: 4 },
 		initialOrientation: 'north',
