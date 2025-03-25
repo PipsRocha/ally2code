@@ -1,3 +1,4 @@
+ONLY FOR GOOGLE CHROME
 
 ## Developing
 
