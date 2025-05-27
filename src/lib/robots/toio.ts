@@ -40,13 +40,13 @@ export class ToioRobot extends Robot {
 
 		if (this.cube) {
 			if (movement === 'forward') {
-				this.cube.move(30, 30, 1000);
+				this.cube.move(20, 20, 1000);
 			} else if (movement === 'backward') {
-				this.cube.move(-30, -30, 1000);
+				this.cube.move(-20, -20, 1000);
 			} else if (movement === 'left') {
-				this.cube.move(-30, 30, 1000);
+				this.cube.move(-10, 10, 800);
 			} else if (movement === 'right') {
-				this.cube.move(30, -30, 1000);
+				this.cube.move(10, -10, 800);
 			}
 		}
 	}
