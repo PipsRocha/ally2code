@@ -6,6 +6,8 @@ import { Robot } from './robot';
 export class ToioRobot extends Robot {
 	private cube: Cube | null = null;
 	async connect() {
+		if (this.cube) return; // Already connected
+
 		console.log('discover');
 		const cubesFound = await new NearestScanner().start();
 		if (!cubesFound) {
@@ -14,16 +16,28 @@ export class ToioRobot extends Robot {
 		const cube = Array.isArray(cubesFound) ? cubesFound[0] : cubesFound;
 		this.cube = await cube.connect();
 	}
+
 	async disconnect() {
 		if (this.cube) {
 			await this.cube.disconnect();
+			this.cube = null;
 		}
 	}
+	
 	async canMove(movement: Movement): Promise<boolean> {
 		console.log(movement);
 		return true;
 	}
+	
 	async move(movement: Movement) {
+		if (!this.cube) {
+			console.warn('Cube is not connected.');
+			return;
+		}
+		
+		console.log(`Moving ${movement}`);
+		// then perform the move
+
 		if (this.cube) {
 			if (movement === 'forward') {
 				this.cube.move(30, 30, 1000);
