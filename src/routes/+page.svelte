@@ -14,6 +14,7 @@
 		ChevronUp,
 		Music
 	} from 'lucide-svelte';
+	import { onMount } from 'svelte';
 
 	const robotOptions: { label: string; value: RobotType }[] = [
 		{ label: 'TOIO', value: 'toio' },
@@ -22,8 +23,8 @@
 	];
 
 	const modeOptions: { label: string; value: Mode }[] = [
-		{ label: 'No Awareness', value: 'no-awareness' },
-		{ label: 'Private', value: 'private' },
+		//{ label: 'No Awareness', value: 'no-awareness' },
+		//{ label: 'Private', value: 'private' },
 		{ label: 'Shared', value: 'shared' }
 	];
 
@@ -44,6 +45,60 @@
 	let robotState = $derived(
 		new RobotState(selectedRobot.value, selectedLabyrinth.value, selectedMode.value)
 	);
+
+	let topCodesModule: any;
+	let topCodes: number[] = [];
+	let tempTopCodes: number[] | null = null;
+
+	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
+		
+		const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
+		//const removedTopCodes = oldTopCodes.filter((code) => !topcodes.includes(code)); // not used for now
+		
+		for (let i = 0; i < addedTopCodes.length; i++) {
+			console.log(modeOptions[0]);
+			//topcodeAudio?.play();
+			//await playSounds(addedTopCodes[i]);
+		}
+	}
+	
+
+
+	let lastExecutionTime = 0;
+	onMount(async () => {
+		//navigator.mediaDevices.getUserMedia({ audio: true });
+		//initializeAudios();
+
+		const { TopCodes } = await import('$lib/topcodes');
+		topCodesModule = TopCodes;
+		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
+			const currentTime = Date.now();
+			if (currentTime - lastExecutionTime >= 900) {
+				var json = JSON.parse(jsonString);
+				const newTopCodes = json.topcodes.map((c: any) => c.code);
+
+				// If the topcodes are the same as in the previous "frame" and
+				// they are different from the previous topcodes, process them
+				if (
+					tempTopCodes &&
+					//equalsCheck(tempTopCodes, newTopCodes) &&
+					//notEqualsCheck(topCodes, newTopCodes)
+					console.log("Equals Check")
+				) {
+					const oldTopCodes = topCodes;
+					topCodes = newTopCodes;
+					tempTopCodes = null;
+					processTopCodes(topCodes, oldTopCodes);
+				} else {
+					tempTopCodes = newTopCodes;
+				}
+
+				// Update the last execution time
+				lastExecutionTime = currentTime;
+			}
+		});
+		topCodesModule.startStopVideoScan('video-canvas');
+	});
 </script>
 
 <div class="flex h-full flex-col">
@@ -92,6 +147,11 @@
 		</div>
 	</div>
 	<Separator />
+	<div class="flex flex-1 items-center justify-center">
+		<canvas id="video-canvas" height="480" width="480"></canvas>
+		
+		
+	</div>
 	<div class="my-10 flex flex-1 flex-col items-center justify-center gap-y-10">
 		<div class="grid">
 			{#each robotState.labyrinth.matrix as row, y}
