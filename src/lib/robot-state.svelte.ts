@@ -2,6 +2,7 @@ import { DashRobot, MicrobitRobot, ToioRobot, type Robot } from './robots';
 import {
 	moves,
 	type Labyrinth,
+	type Maze,
 	type Mode,
 	type Movement,
 	type Orientation,
@@ -9,16 +10,18 @@ import {
 	type RobotConnectionState,
 	type RobotType
 } from './types';
+import { playAudio } from './utils';
 
 export class RobotState {
 	robot!: Robot;
-	labyrinth: Labyrinth;
+	map: Labyrinth | Maze;
 	mode: Mode;
 	connectionState: RobotConnectionState = $state('disconnected');
 	position: Position = $state({ x: 0, y: 0 });
 	orientation: Orientation = $state('north');
+	path : number;
 
-	constructor(robot: RobotType, labyrinth: Labyrinth, mode: Mode) {
+	constructor(robot: RobotType, map: Labyrinth | Maze, mode: Mode) {
 		if (robot === 'toio') {
 			this.robot = new ToioRobot();
 		} else if (robot === 'microbit') {
@@ -27,10 +30,11 @@ export class RobotState {
 			this.robot = new DashRobot();
 		}
 
-		this.labyrinth = labyrinth;
+		this.map = map;
 		this.mode = mode;
-		this.position = labyrinth.initialPosition;
-		this.orientation = labyrinth.initialOrientation;
+		this.position = map.initialPosition;
+		this.orientation = map.initialOrientation;
+		this.path = 0;
 	}
 
 	async connect() {
@@ -52,24 +56,25 @@ export class RobotState {
 
 		if (
 			newPosition.x < 0 ||
-			newPosition.x >= this.labyrinth.matrix[0].length ||
+			newPosition.x >= this.map.matrix[0].length ||
 			newPosition.y < 0 ||
-			newPosition.y >= this.labyrinth.matrix.length
+			newPosition.y >= this.map.matrix.length
 		) {
 			console.log('out of bounds');
 			return false;
 		}
 
-		if (this.labyrinth.matrix[newPosition.y][newPosition.x] === 0) {
+		if (this.map.matrix[newPosition.y][newPosition.x] === 0) {
 			console.log('wall');
 			return false;
 		}
-
 		return true;
 	}
 
 	move(movement: Movement) {
 		if (!this.canMove(movement)) {
+			const noWayAudio = new Audio('/sounds/sem_passagem.wav');
+			playAudio(noWayAudio);
 			return;
 		}
 
@@ -83,9 +88,23 @@ export class RobotState {
 		this.robot.move(movement);
 		this.position = newPosition;
 		this.orientation = newOrientation;
+		this.path += this.map.matrix[newPosition.y][newPosition.x];
+		console.log('PATH: '+ this.path);
 
-		if (this.reachedTarget()) {
+		if (this.reachedTarget() && this.map.type === 'maze') {
 			console.log('target reached');
+			let target: HTMLAudioElement;
+
+			if (this.map.targetResult == this.path) {
+				target = new Audio('/sounds/lucky.wav');
+				playAudio(target);
+			} else {
+				target = new Audio('/sounds/not_here');
+				const realValue = new Audio('/sounds/' + this.map.targetResult + '.wav');
+				playAudio(realValue);
+			}
+			
+		} else {
 			this.robot.dance();
 		}
 	}
@@ -100,8 +119,8 @@ export class RobotState {
 
 	reachedTarget(): boolean {
 		return (
-			this.position.x === this.labyrinth.targetPosition.x &&
-			this.position.y === this.labyrinth.targetPosition.y
+			this.position.x === this.map.targetPosition.x &&
+			this.position.y === this.map.targetPosition.y
 		);
 	}
 }

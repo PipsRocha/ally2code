@@ -56,6 +56,16 @@ export type Labyrinth = {
 	initialPosition: Position;
 	initialOrientation: Orientation;
 	targetPosition: Position;
+	type: 'labyrinth';
+};
+
+export type Maze = {
+	matrix: number[][];
+	initialPosition: Position;
+	initialOrientation: Orientation;
+	targetPosition: Position;
+	targetResult: number;
+	type:'maze';
 };
 
 export type Log = {

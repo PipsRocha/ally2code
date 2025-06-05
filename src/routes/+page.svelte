@@ -3,8 +3,11 @@
 	import * as Select from '$lib/components/ui/select';
 	import { Separator } from '$lib/components/ui/separator';
 	import { labyrinths } from '$lib/labyrinths';
+	import { maze } from '$lib/mathmaze';
 	import { RobotState } from '$lib/robot-state.svelte';
+	import { ToioRobot } from '$lib/robots';
 	import type { Labyrinth, Mode, RobotType } from '$lib/types';
+	import { notEqualsCheck, playAudio } from '$lib/utils';
 	import {
 		AudioLines,
 		Bot,
@@ -12,6 +15,7 @@
 		ChevronLeft,
 		ChevronRight,
 		ChevronUp,
+		Maximize,
 		Music
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
@@ -28,14 +32,21 @@
 		{ label: 'Shared', value: 'shared' }
 	];
 
-	const labyrinthOptions: { label: string; value: Labyrinth }[] = [
+	const labyrinthOptions: { label: string; value: Labyrinth | Maze}[] = [
 		{ label: 'Training', value: labyrinths.labyrinth_train },
 		{ label: 'Puzzle 1', value: labyrinths.labyrinth_p1 },
 		{ label: 'Puzzle 2', value: labyrinths.labyrinth_p2 },
 		{ label: 'Puzzle 3', value: labyrinths.labyrinth_p3 },
 		{ label: 'Puzzle 4', value: labyrinths.labyrinth_p4 },
 		{ label: 'Puzzle 5', value: labyrinths.labyrinth_p5 },
-		{ label: 'Puzzle 6', value: labyrinths.labyrinth_p6 }
+		{ label: 'Puzzle 6', value: labyrinths.labyrinth_p6 },
+		{ label: 'Maze 1', value: maze.maze_p1 },
+		{ label: 'Maze 2', value: maze.maze_p2 },
+		{ label: 'Maze 3', value: maze.maze_p3 },
+		{ label: 'Maze 4', value: maze.maze_p4 },
+		{ label: 'Maze 5', value: maze.maze_p5 },
+		{ label: 'Maze 6', value: maze.maze_p6 },
+
 	];
 
 	let selectedRobot: { label: string; value: RobotType } = $state(robotOptions[0]);
@@ -46,32 +57,134 @@
 		new RobotState(selectedRobot.value, selectedLabyrinth.value, selectedMode.value)
 	);
 
-	let topCodesModule: any;
+	/////////////////////////////////////
+let topCodesModule: any;
 	let topCodes: number[] = [];
 	let tempTopCodes: number[] | null = null;
 
-	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
-		
-		const addedTopCodes = topcodes.filter((code) => !oldTopCodes.includes(code));
-		//const removedTopCodes = oldTopCodes.filter((code) => !topcodes.includes(code)); // not used for now
-		
-		for (let i = 0; i < addedTopCodes.length; i++) {
-			console.log(modeOptions[0]);
-			//topcodeAudio?.play();
-			//await playSounds(addedTopCodes[i]);
-		}
+	let audiocurr: HTMLAudioElement | undefined;
+
+	let topcodeAudio: HTMLAudioElement | undefined;
+	let playButAudio: HTMLAudioElement | undefined;
+	let outAudio: HTMLAudioElement | undefined;
+
+	let leftAudio: HTMLAudioElement | undefined;
+	let rightAudio: HTMLAudioElement | undefined;
+	let frontAudio: HTMLAudioElement | undefined;
+	let backwardAudio: HTMLAudioElement | undefined;
+	let danceAudio: HTMLAudioElement | undefined;
+	let speakAudio: HTMLAudioElement | undefined;
+
+	let noWayAudio: HTMLAudioElement | undefined;
+	let movedRobotAudio: HTMLAudioElement | undefined;
+
+	let blockDancar: HTMLAudioElement | undefined;
+	let blockRight: HTMLAudioElement | undefined;
+	let blockLeft: HTMLAudioElement | undefined;
+	let blockSpeak: HTMLAudioElement | undefined;
+	let blockForward: HTMLAudioElement | undefined;
+	let blockBack: HTMLAudioElement | undefined;
+
+	let audiosInitialized: boolean = false;
+
+	function initializeAudios() {
+		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
+		playButAudio = new Audio('/sounds/lucky.wav');
+		outAudio = new Audio('/sounds/out_sound.wav');
+
+		leftAudio = new Audio('/sounds/andar_esquerda.wav');
+		rightAudio = new Audio('/sounds/andar_direita.wav');
+		frontAudio = new Audio('/sounds/andar_frente.wav');
+		backwardAudio = new Audio('/sounds/andar_tras.wav');
+		danceAudio = new Audio('/sounds/dance_robot.wav');
+		speakAudio = new Audio('/sounds/robot_speak.wav');
+
+		noWayAudio = new Audio('/sounds/sem_passagem.wav');
+		movedRobotAudio = new Audio('/sounds/not_here.wav');
+
+		blockDancar = new Audio('/sounds/bloco_dancar.mp3');
+		blockRight = new Audio('/sounds/bloco_direita.mp3');
+		blockLeft = new Audio('/sounds/bloco_esquerda.mp3');
+		blockSpeak = new Audio('/sounds/bloco_falar.mp3');
+		blockForward = new Audio('/sounds/bloco_frente.mp3');
+		blockBack = new Audio('/sounds/bloco_tras.mp3');
+		audiosInitialized = true;
 	}
-	
+
+	function blocks_setSink(deviceId : string){
+		blockDancar?.setSinkId(deviceId);
+		blockRight?.setSinkId(deviceId);
+		blockLeft?.setSinkId(deviceId);
+		blockSpeak?.setSinkId(deviceId);
+		blockForward?.setSinkId(deviceId);
+		blockBack?.setSinkId(deviceId);
+
+		leftAudio?.setSinkId(deviceId);
+		rightAudio?.setSinkId(deviceId);
+		frontAudio?.setSinkId(deviceId);
+		backwardAudio?.setSinkId(deviceId);
+
+		noWayAudio?.setSinkId(deviceId);
+		movedRobotAudio?.setSinkId(deviceId);
+	}
+
+	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
+			//topcodeAudio?.play();
+			console.log('in process');
+		
+			if (oldTopCodes.length > topcodes.length){
+				console.log("list is smaller")
+				outAudio?.play();
+			} else if (oldTopCodes.length < topcodes.length) {
+				
+				const addedTopCodes: number[] = [];
+
+				const oldCount: Record<string, number> = oldTopCodes.reduce((acc, code) => {
+					const key = code.toString();
+					acc[key] = (acc[key] || 0) + 1;
+					return acc;
+				}, {} as Record<string, number>);
+
+				topcodes.forEach((code) => {
+					const key = code.toString();
+					if (!oldCount[key]) {
+						addedTopCodes.push(code);
+					} else {
+						oldCount[key]--;
+					}
+				});
+
+				console.log("added " + addedTopCodes);
+				for (let i = 0; i < addedTopCodes.length; i++) {
+					console.log("going through list");
+					console.log(modeOptions[0]);
+					topcodeAudio?.play();
+					await playSounds(addedTopCodes[i]);
+				}
+			} else {
+				for (let i = 0; i < topCodes.length; i++) {
+					console.log("going through list");
+					console.log(modeOptions[0]);
+					topcodeAudio?.play();
+					await playSounds(topCodes[i]);
+				}
+			}
+			
+			//const removedTopCodes = oldTopCodes.filter((code) => !topcodes.includes(code)); // not used for now
+			
+			
+	}
 
 
 	let lastExecutionTime = 0;
 	onMount(async () => {
-		//navigator.mediaDevices.getUserMedia({ audio: true });
-		//initializeAudios();
+		navigator.mediaDevices.getUserMedia({ audio: true });
+		initializeAudios();
 
 		const { TopCodes } = await import('$lib/topcodes');
 		topCodesModule = TopCodes;
 		topCodesModule.setVideoFrameCallback('video-canvas', function (jsonString: string) {
+
 			const currentTime = Date.now();
 			if (currentTime - lastExecutionTime >= 900) {
 				var json = JSON.parse(jsonString);
@@ -79,12 +192,7 @@
 
 				// If the topcodes are the same as in the previous "frame" and
 				// they are different from the previous topcodes, process them
-				if (
-					tempTopCodes &&
-					//equalsCheck(tempTopCodes, newTopCodes) &&
-					//notEqualsCheck(topCodes, newTopCodes)
-					console.log("Equals Check")
-				) {
+				if (tempTopCodes && notEqualsCheck(topCodes, newTopCodes)) {
 					const oldTopCodes = topCodes;
 					topCodes = newTopCodes;
 					tempTopCodes = null;
@@ -99,7 +207,120 @@
 		});
 		topCodesModule.startStopVideoScan('video-canvas');
 	});
+
+
+	// shared actions and pings
+	async function playSounds(code: number | string) {
+		switch (code) {
+			
+			case 47:
+				audiocurr = blockSpeak;
+				break;
+			
+			case 589:
+				audiocurr = blockDancar;
+				break;
+			
+			case 31:
+				audiocurr = blockForward;
+				break;
+			
+			case 59:
+				audiocurr = blockBack;
+				break;
+			
+			case 61:
+				audiocurr = blockRight;
+				break;
+			
+			case 79:
+				audiocurr = blockLeft;
+				break;
+			case 'front':
+				audiocurr = frontAudio;
+				break;
+			case 'backward':
+				audiocurr = backwardAudio;
+				break;
+			case 'left':
+				audiocurr = leftAudio;
+				break;
+			case 'right':
+				audiocurr = rightAudio;
+				break;
+			case 'dance':
+				audiocurr = danceAudio;
+				break;
+			case 'speak':
+				audiocurr = speakAudio;
+				break;
+			case 'noway':
+				audiocurr = noWayAudio;
+				break;
+			case 'movedme':
+			audiocurr = movedRobotAudio;
+			break;
+		}
+
+		if (audiocurr) {
+			await playAudio(audiocurr);
+		}
+	}
+
+	async function play() {
+		console.log(topCodes);
+		const topcodetoPlay = topCodes;
+		playButAudio?.play();
+
+			for (let i = 0; i < topcodetoPlay.length+1; i++) {
+			if (topcodetoPlay[i] === 115 || topcodetoPlay[i] === 47) {
+				await playSounds('speak');
+
+			} else if (topcodetoPlay[i] === 155 || topcodetoPlay[i] === 589) {
+				await playSounds('dance');
+
+			} else if (topcodetoPlay[i] === 55 || topcodetoPlay[i] === 31) {
+				robotState.move('forward');
+				playSounds('front');
+
+			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
+				playSounds('backward');
+				robotState.move('backward');
+
+			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
+				playSounds('right');
+				robotState.move("right");
+
+			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
+				playSounds('left');
+				robotState.move("left");
+			}
+		}
+
+	}
+	async function handlekey(e: any) {
+		if (e.keyCode == 80){ //p
+			console.log("Play Button");
+			play();
+		}
+		if (e.keyCode == 68){ //d
+			console.log("On Demand Button");
+			//onDemand();
+		}
+		if (e.keyCode == 77){ //m
+			console.log("Moved Robot");
+			await playSounds("movedme");
+		}
+		if (e.keyCode == 85){ //u
+			if(robotOptions[0].value == "toio"){
+				//updateRobotPosition();
+
+			}
+		}
+    }
 </script>
+
+<svelte:window on:keydown|preventDefault={handlekey} />
 
 <div class="flex h-full flex-col">
 	<div class="container flex h-16 flex-row items-center justify-between py-4">

@@ -11,7 +11,8 @@ export const labyrinths: Record<string, Labyrinth> = {
 		],
 		initialPosition: { x: 6, y: 4 },
 		initialOrientation: 'north',
-		targetPosition: { x: 3, y: 0 }
+		targetPosition: { x: 3, y: 0 },
+		type:'labyrinth'
 	},
 	labyrinth_p1: {
 		matrix: [
@@ -23,7 +24,8 @@ export const labyrinths: Record<string, Labyrinth> = {
 		],
 		initialPosition: { x: 4, y: 4 },
 		initialOrientation: 'north',
-		targetPosition: { x: 3, y: 0 }
+		targetPosition: { x: 3, y: 0 },
+		type:'labyrinth'
 	},
 	labyrinth_p2: {
 		matrix: [
@@ -35,7 +37,8 @@ export const labyrinths: Record<string, Labyrinth> = {
 		],
 		initialPosition: { x: 2, y: 4 },
 		initialOrientation: 'north',
-		targetPosition: { x: 3, y: 0 }
+		targetPosition: { x: 3, y: 0 },
+		type:'labyrinth'
 	},
 	labyrinth_p3: {
 		matrix: [
@@ -47,7 +50,8 @@ export const labyrinths: Record<string, Labyrinth> = {
 		],
 		initialPosition: { x: 4, y: 0 },
 		initialOrientation: 'south',
-		targetPosition: { x: 1, y: 0 }
+		targetPosition: { x: 1, y: 0 },
+		type:'labyrinth'
 	},
 	labyrinth_p4: {
 		matrix: [
@@ -59,7 +63,8 @@ export const labyrinths: Record<string, Labyrinth> = {
 		],
 		initialPosition: { x: 0, y: 4 },
 		initialOrientation: 'north',
-		targetPosition: { x: 6, y: 2 }
+		targetPosition: { x: 6, y: 2 },
+		type:'labyrinth'
 	},
 	labyrinth_p5: {
 		matrix: [
@@ -71,7 +76,8 @@ export const labyrinths: Record<string, Labyrinth> = {
 		],
 		initialPosition: { x: 2, y: 2 },
 		initialOrientation: 'east',
-		targetPosition: { x: 0, y: 5 }
+		targetPosition: { x: 0, y: 5 },
+		type:'labyrinth'
 	},
 	labyrinth_p6: {
 		matrix: [
@@ -83,6 +89,7 @@ export const labyrinths: Record<string, Labyrinth> = {
 		],
 		initialPosition: { x: 6, y: 3 },
 		initialOrientation: 'west',
-		targetPosition: { x: 6, y: 0 }
+		targetPosition: { x: 6, y: 0 },
+		type:'labyrinth'
 	}
 };
