@@ -1,48 +1,37 @@
 <script lang="ts">
 	import '../app.pcss';
-	import { onMount, onDestroy } from 'svelte';
 
-	// Trigger key events based on ?simulate=abc in URL
-	function simulateKeysFromURL() {
-		const url = new URL(window.location.href);
-		const keys = url.searchParams.get('simulate');
+import { onMount } from 'svelte';
 
-		if (keys) {
-			for (const key of keys) {
-				const event = new KeyboardEvent('keydown', {
-					key,
-					code: `Key${key.toUpperCase()}`,
-					keyCode: key.toUpperCase().charCodeAt(0),
-					which: key.toUpperCase().charCodeAt(0),
-					bubbles: true,
-				});
-				document.dispatchEvent(event);
-			}
-		}
-	}
+function simulateKeyPressesFromHash(hash: string) {
+  const match = hash.match(/^#simulate=([a-zA-Z]+)(?:&|$)/);
+  if (match) {
+    const keys = match[1];
+    for (const key of keys) {
+      const event = new KeyboardEvent('keydown', {
+        key,
+        code: `Key${key.toUpperCase()}`,
+        keyCode: key.toUpperCase().charCodeAt(0),
+        which: key.toUpperCase().charCodeAt(0),
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+    }
 
-	function setupGlobalKeyListener(callback: (key: string) => void) {
-		const handler = (event: KeyboardEvent) => {
-			callback(event.key);
-		};
-		document.addEventListener('keydown', handler);
-		return () => document.removeEventListener('keydown', handler);
-	}
+    // Optional: Clear the hash after simulating
+    history.replaceState(null, '', window.location.pathname);
+  }
+}
 
-	onMount(() => {
-		simulateKeysFromURL();
+onMount(() => {
+  simulateKeyPressesFromHash(window.location.hash);
 
-		const unsubscribe = setupGlobalKeyListener((key) => {
-			console.log('Global key press:', key);
+  // Also listen for hash changes (e.g. simulate=p&t=2)
+  window.addEventListener('hashchange', () => {
+    simulateKeyPressesFromHash(window.location.hash);
+  });
+});
 
-			if (key === 'p') {
-				// 🚨 Replace this with your desired behavior:
-				console.log("You pressed 'p' globally!");
-			}
-		});
-
-		onDestroy(unsubscribe);
-	});
 </script>
 
 <slot></slot>
