@@ -6,7 +6,7 @@
 	import { maze } from '$lib/mathmaze';
 	import { RobotState } from '$lib/robot-state.svelte';
 	import { ToioRobot } from '$lib/robots';
-	import type { Labyrinth, Mode, RobotType } from '$lib/types';
+	import type { Labyrinth, Mode, RobotType, Maze} from '$lib/types';
 	import { notEqualsCheck, playAudio } from '$lib/utils';
 	import {
 		AudioLines,
@@ -50,7 +50,7 @@
 	];
 
 	let selectedRobot: { label: string; value: RobotType } = $state(robotOptions[0]);
-	let selectedLabyrinth: { label: string; value: Labyrinth } = $state(labyrinthOptions[0]);
+	let selectedLabyrinth: { label: string; value: Labyrinth | Maze} = $state(labyrinthOptions[0]);
 	let selectedMode: { label: string; value: Mode } = $state(modeOptions[0]);
 
 	let robotState = $derived(
@@ -358,9 +358,9 @@ let topCodesModule: any;
 					<Select.Value placeholder="Select a puzzle" />
 				</Select.Trigger>
 				<Select.Content>
-					{#each labyrinthOptions as labyrinth}
-						<Select.Item value={labyrinth.value} label={labyrinth.label} on:click={() => {}}>
-							{labyrinth.label}
+					{#each labyrinthOptions as map}
+						<Select.Item value={map.value} label={map.label} on:click={() => {}}>
+							{map.label}
 						</Select.Item>
 					{/each}
 				</Select.Content>
@@ -375,7 +375,7 @@ let topCodesModule: any;
 	</div>
 	<div class="my-10 flex flex-1 flex-col items-center justify-center gap-y-10">
 		<div class="grid">
-			{#each robotState.labyrinth.matrix as row, y}
+			{#each robotState.map.matrix as row, y}
 				<div class="flex">
 					{#each row as cell, x}
 						<div

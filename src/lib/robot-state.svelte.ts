@@ -94,6 +94,7 @@ export class RobotState {
 		if (this.reachedTarget() && this.map.type === 'maze') {
 			console.log('target reached');
 			let target: HTMLAudioElement;
+			console.log('PATH: '+ this.path);
 
 			if (this.map.targetResult == this.path) {
 				target = new Audio('/sounds/lucky.wav');
