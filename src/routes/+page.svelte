@@ -23,7 +23,7 @@
 	const robotOptions: { label: string; value: RobotType }[] = [
 		{ label: 'TOIO', value: 'toio' },
 		{ label: 'MICROBIT', value: 'microbit' },
-		{ label: 'DASH', value: 'dash' }
+		
 	];
 
 	const modeOptions: { label: string; value: Mode }[] = [

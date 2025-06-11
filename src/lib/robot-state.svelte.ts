@@ -1,4 +1,4 @@
-import { DashRobot, MicrobitRobot, ToioRobot, type Robot } from './robots';
+import { MicrobitRobot, ToioRobot, type Robot } from './robots';
 import {
 	moves,
 	type Labyrinth,
@@ -26,8 +26,6 @@ export class RobotState {
 			this.robot = new ToioRobot();
 		} else if (robot === 'microbit') {
 			this.robot = new MicrobitRobot();
-		} else if (robot === 'dash') {
-			this.robot = new DashRobot();
 		}
 
 		this.map = map;
