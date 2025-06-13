@@ -17,6 +17,7 @@
 	"devDependencies": {
 		"@playwright/test": "^1.49.1",
 		"@sveltejs/adapter-auto": "^3.3.1",
+		"@sveltejs/adapter-netlify": "^5.0.2",
 		"@sveltejs/kit": "^2.12.1",
 		"@sveltejs/vite-plugin-svelte": "^3.1.0",
 		"@types/eslint": "^9.6.1",
@@ -44,7 +45,6 @@
 	"dependencies": {
 		"@toio/cube": "^1.1.0",
 		"@toio/scanner": "^1.0.1",
-		
 		"bits-ui": "^0.21.16",
 		"clsx": "^2.1.1",
 		"lucide-svelte": "^0.468.0",
