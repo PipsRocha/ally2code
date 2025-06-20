@@ -68,6 +68,15 @@ export type Maze = {
 	type:'maze';
 };
 
+export type Animals = {
+	matrix: number[][];
+	initialPosition: Position;
+	initialOrientation: Orientation;
+	targetPosition: Position;
+	nonTargetPositions: Position [];
+	type:'animalmaze';
+};
+
 export type Log = {
 	robot: RobotType;
 	mode: Mode;

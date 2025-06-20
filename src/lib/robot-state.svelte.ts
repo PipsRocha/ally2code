@@ -8,20 +8,21 @@ import {
 	type Orientation,
 	type Position,
 	type RobotConnectionState,
-	type RobotType
+	type RobotType,
+	type Animals
 } from './types';
 import { playAudio } from './utils';
 
 export class RobotState {
 	robot!: Robot;
-	map: Labyrinth | Maze;
+	map: Labyrinth | Maze | Animals;
 	mode: Mode;
 	connectionState: RobotConnectionState = $state('disconnected');
 	position: Position = $state({ x: 0, y: 0 });
 	orientation: Orientation = $state('north');
 	path : number;
 
-	constructor(robot: RobotType, map: Labyrinth | Maze, mode: Mode) {
+	constructor(robot: RobotType, map: Labyrinth | Maze | Animals, mode: Mode) {
 		if (robot === 'toio') {
 			this.robot = new ToioRobot();
 		} else if (robot === 'microbit') {
@@ -77,36 +78,50 @@ export class RobotState {
 		}
 
 		const moveOffset = moves[this.orientation][movement];
-		const newPosition = {
-			x: this.position.x + moveOffset.x,
-			y: this.position.y + moveOffset.y
-		};
-		const newOrientation = moveOffset.orientation;
+			const newPosition = {
+				x: this.position.x + moveOffset.x,
+				y: this.position.y + moveOffset.y
+			};
+			const newOrientation = moveOffset.orientation;
 
-		this.robot.move(movement);
-		this.position = newPosition;
-		this.orientation = newOrientation;
-		this.path += this.map.matrix[newPosition.y][newPosition.x];
-		console.log('PATH: '+ this.path);
+			this.robot.move(movement);
+			this.position = newPosition;
+			this.orientation = newOrientation;
 
-		if (this.reachedTarget() && this.map.type === 'maze') {
-			console.log('target reached');
-			let target: HTMLAudioElement;
+		if (this.map.type !== 'animalmaze') {
+
+			this.path += this.map.matrix[newPosition.y][newPosition.x];
 			console.log('PATH: '+ this.path);
 
-			if (this.map.targetResult == this.path) {
-				target = new Audio('/sounds/lucky.wav');
-				playAudio(target);
-			} else {
-				target = new Audio('/sounds/not_here');
-				const realValue = new Audio('/sounds/' + this.map.targetResult + '.wav');
-				playAudio(realValue);
+			if (this.reachedTarget() && this.map.type === 'maze') {
+				console.log('target reached');
+				let target: HTMLAudioElement;
+				console.log('PATH: '+ this.path);
+
+				if (this.map.targetResult === this.path) {
+					target = new Audio('/sounds/lucky.wav');
+					playAudio(target);
+				} else {
+					target = new Audio('/sounds/not_here.wav');
+					const realValue = new Audio('/sounds/' + this.map.targetResult + '.wav');
+					playAudio(realValue);
+				}
 			}
-			
-		} else {
-			this.robot.dance();
-		}
+
+	} else {
+		
+			if (this.reachedNonTarget()) {
+				const wrongAudio = new Audio('/sounds/wrong.wav');
+				playAudio(wrongAudio);
+				return;
+			}
+
+			if (this.reachedTarget()) {
+				const correctAudio = new Audio('/sounds/lucky.wav');
+				playAudio(correctAudio);
+			}
 	}
+}
 
 	dance() {
 		this.robot?.dance();
@@ -122,4 +137,15 @@ export class RobotState {
 			this.position.y === this.map.targetPosition.y
 		);
 	}
+
+	reachedNonTarget(): boolean {
+		if (this.map.type !== 'animalmaze') return false;
+
+		const animalMap = this.map as Animals;
+
+		return animalMap.nonTargetPositions.some(
+			(pos) => pos.x === this.position.x && pos.y === this.position.y
+		);
+	}
+
 }
