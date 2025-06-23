@@ -42,27 +42,6 @@
 		{ label: 'Maze 4', value: maze.maze_p4 },
 		{ label: 'Maze 5', value: maze.maze_p5 },
 		{ label: 'Maze 6', value: maze.maze_p6 },
-
-		{ label: 'Habitat Pinguim', value: animalmaze.habitat_p},
-		{ label: 'Habitat Tartaruga', value: animalmaze.habitat_t},
-		{ label: 'Habitat Urso', value: animalmaze.habitat_u},
-		{ label: 'Habitat Vaca', value: animalmaze.habitat_v},
-		{ label: 'Habitat Baleia', value: animalmaze.habitat_b},
-		{ label: 'Habitat Elefante', value: animalmaze.habitat_e},
-
-		{ label: 'Característica Pinguim', value: animalmaze.fur_p },
-		{ label: 'Característica Tartaruga', value: animalmaze.fur_t},
-		{ label: 'Característica Urso', value: animalmaze.fur_u},
-		{ label: 'Característica Vaca', value: animalmaze.fur_v},
-		{ label: 'Característica Baleia', value: animalmaze.fur_b},
-		{ label: 'Característica Elefante', value: animalmaze.fur_e},
-
-		{ label: 'Alimentação Pinguim', value: animalmaze.food_p },
-		{ label: 'Alimentação Tartaruga', value: animalmaze.food_t},
-		{ label: 'Alimentação Urso', value: animalmaze.food_u},
-		{ label: 'Alimentação Vaca', value: animalmaze.food_v},
-		{ label: 'Alimentação Baleia', value: animalmaze.food_b},
-		{ label: 'Alimentação Elefante', value: animalmaze.fod_e},
 	];
 
 	let selectedRobot: { label: string; value: RobotType } = $state(robotOptions[0]);
@@ -75,8 +54,8 @@
 
 	/////////////////////////////////////
 let topCodesModule: any;
-	let topCodes: number[] = [];
-	let tempTopCodes: number[] | null = null;
+	let topCodes:{ code: number; angle: number | null } [] = [];
+	let tempTopCodes: { code: number; angle: number | null }[] | null = null;
 
 	let audiocurr: HTMLAudioElement | undefined;
 
@@ -101,12 +80,15 @@ let topCodesModule: any;
 	let blockForward: HTMLAudioElement | undefined;
 	let blockBack: HTMLAudioElement | undefined;
 
+	let congrats: HTMLAudioElement | undefined;
+
 	let audiosInitialized: boolean = false;
 
 	function initializeAudios() {
 		topcodeAudio = new Audio('/sounds/cartoon_wink.wav');
 		playButAudio = new Audio('/sounds/lucky.wav');
 		outAudio = new Audio('/sounds/out_sound.wav');
+		congrats = new Audio('/sounds/congrats.wav');
 
 		leftAudio = new Audio('/sounds/andar_esquerda.wav');
 		rightAudio = new Audio('/sounds/andar_direita.wav');
@@ -129,55 +111,56 @@ let topCodesModule: any;
 
 
 
-	async function processTopCodes(topcodes: number[], oldTopCodes: number[]) {
+	async function processTopCodes(topcodes: { code: number; angle: number | null }[],
+	oldTopCodes: { code: number; angle: number | null }[]) {
 			//topcodeAudio?.play();
+			
 			console.log('in process');
 		
 			if (oldTopCodes.length > topcodes.length){
 				console.log("list is smaller")
 				outAudio?.play();
+
 			} else if (oldTopCodes.length < topcodes.length) {
 				
-				const addedTopCodes: number[] = [];
+				//const addedTopCodes: number[] = [];
+				const addedTopCodes: { code: number; angle: number | null }[] = [];
 
-				const oldCount: Record<string, number> = oldTopCodes.reduce((acc, code) => {
-					const key = code.toString();
-					acc[key] = (acc[key] || 0) + 1;
+				const oldCount: Record<string, number> = oldTopCodes.reduce((acc, c) => {
+					//const key = code.toString();
+					//acc[key] = (acc[key] || 0) + 1;
+					acc[c.code] = (acc[c.code] || 0) + 1;
 					return acc;
-				}, {} as Record<string, number>);
+				}, {} as Record<number, number>);
 
-				topcodes.forEach((code) => {
-					const key = code.toString();
-					if (!oldCount[key]) {
-						addedTopCodes.push(code);
+				topcodes.forEach((c) => {
+					//const key = code.toString();
+					if (!oldCount[c.code]) {
+						addedTopCodes.push(c);
 					} else {
-						oldCount[key]--;
+						oldCount[c.code]--;
 					}
 				});
 
 				console.log("added " + addedTopCodes);
-				for (let i = 0; i < addedTopCodes.length; i++) {
+				for (let tc of addedTopCodes) {
 					console.log("going through list");
 					console.log(modeOptions[0]);
 					topcodeAudio?.play();
-					await playSounds(addedTopCodes[i]);
+					await playSounds(tc.code, tc.angle);
 				}
-			} else {
-				for (let i = 0; i < topCodes.length; i++) {
-					console.log("going through list");
-					console.log(modeOptions[0]);
-					topcodeAudio?.play();
-					await playSounds(topCodes[i]);
-				}
-			}
+			} 
 			
 			//const removedTopCodes = oldTopCodes.filter((code) => !topcodes.includes(code)); // not used for now
-			
-			
+	
 	}
 
 
 	let lastExecutionTime = 0;
+	let lowerRight = 45;
+	let upperRight = 135;
+	let lowerLeft = -135;
+	let upperLeft = -45;
 	onMount(async () => {
 		navigator.mediaDevices.getUserMedia({ audio: true });
 		initializeAudios();
@@ -189,7 +172,14 @@ let topCodesModule: any;
 			const currentTime = Date.now();
 			if (currentTime - lastExecutionTime >= 900) {
 				var json = JSON.parse(jsonString);
-				const newTopCodes = json.topcodes.map((c: any) => c.code);
+				//const newTopCodes = json.topcodes.map((c: any) => c.code);
+				const newTopCodes = json.topcodes.map((c) => ({
+					code: c.code,
+					angle: c.angle
+				}));
+
+
+				console.log(json.topcodes);
 
 				// If the topcodes are the same as in the previous "frame" and
 				// they are different from the previous topcodes, process them
@@ -211,91 +201,72 @@ let topCodesModule: any;
 
 
 	// shared actions and pings
-	async function playSounds(code: number | string) {
-		switch (code) {
-			
-			case 47:
-				audiocurr = blockSpeak;
-				break;
-			
-			case 589:
-				audiocurr = blockDancar;
-				break;
-			
-			case 31:
-				audiocurr = blockForward;
-				break;
-			
-			case 59:
-				audiocurr = blockBack;
-				break;
-			
-			case 61:
-				audiocurr = blockRight;
-				break;
-			
-			case 79:
-				audiocurr = blockLeft;
-				break;
-			case 'front':
-				audiocurr = frontAudio;
-				break;
-			case 'backward':
-				audiocurr = backwardAudio;
-				break;
-			case 'left':
-				audiocurr = leftAudio;
-				break;
-			case 'right':
-				audiocurr = rightAudio;
-				break;
-			case 'dance':
-				audiocurr = danceAudio;
-				break;
-			case 'speak':
-				audiocurr = speakAudio;
-				break;
-			case 'noway':
-				audiocurr = noWayAudio;
-				break;
-			case 'movedme':
-			audiocurr = movedRobotAudio;
-			break;
-		}
+async function playSounds(code: number | string, angle: number | null) {
+	audiocurr = undefined; // reset before setting
 
-		if (audiocurr) {
-			await playAudio(audiocurr);
+	if (angle == null) {
+		switch (code) {
+			case 'front': audiocurr = frontAudio; break;
+			case 'backward': audiocurr = backwardAudio; break;
+			case 'left': audiocurr = leftAudio; break;
+			case 'right': audiocurr = rightAudio; break;
+			case 'noway': audiocurr = noWayAudio; break;
+		}
+	} else {
+		const degrees = normalizeDegrees((angle * 180) / Math.PI);
+		console.log("D: " + degrees.toFixed(2));
+
+		
+
+		if (code === 55 || (code === 31 && degrees >= -45 && degrees < 45)) {
+			console.log("→ Forward block");
+			audiocurr = blockForward;
+		} else if (code== 453 || code === 31 && (degrees >= 135 || degrees < -135)) {
+			console.log("→ Backward block");
+			audiocurr = blockBack;
+		} else if (code === 31 && degrees >= lowerRight && degrees < upperRight) {
+			console.log("→ Right block");
+			audiocurr = blockRight;
+		} else if (code === 31 && degrees >= lowerLeft && degrees < upperLeft) {
+			console.log("→ Left block");
+			audiocurr = blockLeft;
 		}
 	}
+
+	if (audiocurr) {
+		await playAudio(audiocurr);
+	} else {
+		console.warn('No audio matched for code:', code, 'angle:', angle);
+	}
+}
+
 
 	async function play() {
 		console.log(topCodes);
 		const topcodetoPlay = topCodes;
 		playButAudio?.play();
 
-			for (let i = 0; i < topcodetoPlay.length+1; i++) {
-			if (topcodetoPlay[i] === 115 || topcodetoPlay[i] === 47) {
-				await playSounds('speak');
+			for (let tc of topcodetoPlay) {
+				if (tc.angle === null) return 'unknown';
+				const degrees = normalizeDegrees((tc.angle * 180) / Math.PI);
 
-			} else if (topcodetoPlay[i] === 155 || topcodetoPlay[i] === 589) {
-				await playSounds('dance');
+				if (tc.code == 55 || tc.code == 31 && degrees >= -45 && degrees < 45) {
+					await playSounds('front', null);
+					robotState.move('forward');
 
-			} else if (topcodetoPlay[i] === 55 || topcodetoPlay[i] === 31) {
-				robotState.move('forward');
-				playSounds('front');
+				} else if (tc.code== 453 || (tc.code === 31 && (degrees >= 135 || degrees < -135))) {
 
-			} else if (topcodetoPlay[i] === 185 || topcodetoPlay[i] === 59) {
-				playSounds('backward');
-				robotState.move('backward');
+					await playSounds('backward', null);
+					robotState.move('backward');
 
-			} else if (topcodetoPlay[i] === 205 || topcodetoPlay[i] === 61) {
-				playSounds('right');
-				robotState.move("right");
+				} else if (tc.code === 31 && degrees >= lowerRight && degrees < upperRight) {
+					await playSounds('right', null);
+					robotState.move("right");
 
-			} else if (topcodetoPlay[i] === 285 || topcodetoPlay[i] === 79) {
-				playSounds('left');
-				robotState.move("left");
-			}
+				} else if (tc.code === 31 && degrees >= lowerLeft && degrees < upperLeft) {
+					await playSounds('left', null);
+					robotState.move("left");
+				}
 		}
 
 	}
@@ -308,17 +279,39 @@ let topCodesModule: any;
 			console.log("On Demand Button");
 			//onDemand();
 		}
-		if (e.keyCode == 77){ //m
-			console.log("Moved Robot");
-			await playSounds("movedme");
-		}
-		if (e.keyCode == 85){ //u
-			if(robotOptions[0].value == "toio"){
-				//updateRobotPosition();
 
-			}
+		if (e.keyCode == 70){ //f
+			console.log("Reached end");
+		congrats?.play(); //Congrats	
 		}
+		
     }
+
+	function normalizeDegrees(deg: number): number {
+		let d = ((deg + 180) % 360) - 180;
+		if (d < -180) d += 360;
+		return d;
+	}
+
+	function inverse() {
+		console.log("Inverting");
+		if (upperRight == 135 && lowerRight === 45) {
+			lowerRight = -135;
+			upperRight = -45;
+
+			lowerLeft = 45;
+			upperLeft = 135;
+		} else {
+			lowerRight = 45;
+			upperRight = 135;
+
+			lowerLeft = -135;
+			upperLeft = -45;
+		}
+
+	}
+
+
 </script>
 
 <svelte:window on:keydown|preventDefault={handlekey} />
@@ -344,16 +337,11 @@ let topCodesModule: any;
 			</Select.Root>
 			<Button on:click={() => robotState.connect()}>Connect</Button>
 			<Button on:click={() => robotState.disconnect()}>Disconnect</Button>
-			<Select.Root bind:selected={selectedMode}>
-				<Select.Trigger class="w-48">
-					<Select.Value placeholder="Select a mode" />
-				</Select.Trigger>
-				<Select.Content>
-					{#each modeOptions as mode}
-						<Select.Item value={mode.value} label={mode.label}>{mode.label}</Select.Item>
-					{/each}
-				</Select.Content>
-			</Select.Root>
+			
+				
+			<Button on:click={() => inverse()}>Inverse</Button>
+
+		
 			<Select.Root bind:selected={selectedLabyrinth}>
 				<Select.Trigger class="w-48">
 					<Select.Value placeholder="Select a puzzle" />

@@ -3118,7 +3118,7 @@ class RobotState {
     this.mode = mode;
     this.position = map.initialPosition;
     this.orientation = map.initialOrientation;
-    this.path = 0;
+    this.path = map.initialPosition.x;
   }
   async connect() {
     await this.robot.connect();
@@ -3161,6 +3161,7 @@ class RobotState {
     this.orientation = newOrientation;
     this.path += this.map.matrix[newPosition.y][newPosition.x];
     console.log("PATH: " + this.path);
+
     if (this.reachedTarget() && this.map.type === "maze") {
       console.log("target reached");
       let target;

@@ -4,8 +4,8 @@ export const maze: Record<string, Maze> = {
     maze_p1: {
         matrix: [
             [0, 0, 0, 0, 0, 0, 0],
-            [18, 18, 25, 10, 0, 0, 0],
-            [0, 0, 0, 4, 10, 24, 21],
+            [18, 18, 10, 10, 0, 0, 0],
+            [0, 0, 0, 4, 25, 24, 21],
             [0, 0, 0, 0, 0, 0, 12],
             [0, 0, 0, 0, 0, 0, 8]
         ],
@@ -18,14 +18,14 @@ export const maze: Record<string, Maze> = {
     maze_p2: {
         matrix: [
             [0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 25, 10, 24, 18, 12],
-            [8, 24, 15, 0, 0, 0, 0],
+            [0, 0, 10, 10, 24, 18, 12],
+            [8, 24, 5, 0, 0, 0, 0],
             [21, 0, 0, 0, 0, 0, 0],
             [18, 0, 0, 0, 0, 0, 0]
         ],
         initialPosition: { x: 0, y: 4 },
         initialOrientation: 'north',
-        targetPosition: { x: 1, y: 6 },
+        targetPosition: { x: 6, y: 1 },
         targetResult: 150,
         type:'maze'
     },
@@ -66,7 +66,7 @@ export const maze: Record<string, Maze> = {
             [0, 3, 0, 0, 0, 0, 0]
         ],
         initialPosition: { x: 1, y: 4 },
-        initialOrientation: 'east',
+        initialOrientation: 'north',
         targetPosition: { x: 6, y: 1 },
         targetResult: 160,
         type:'maze'

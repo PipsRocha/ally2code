@@ -33,7 +33,7 @@ export class RobotState {
 		this.mode = mode;
 		this.position = map.initialPosition;
 		this.orientation = map.initialOrientation;
-		this.path = 0;
+		this.path = this.map.matrix[map.initialPosition.y][map.initialPosition.x];
 	}
 
 	async connect() {
@@ -76,6 +76,7 @@ export class RobotState {
 			playAudio(noWayAudio);
 			return;
 		}
+		console.log("I can move");
 
 		const moveOffset = moves[this.orientation][movement];
 			const newPosition = {
@@ -89,6 +90,7 @@ export class RobotState {
 			this.orientation = newOrientation;
 
 		if (this.map.type !== 'animalmaze') {
+			console.log("Math maze");
 
 			this.path += this.map.matrix[newPosition.y][newPosition.x];
 			console.log('PATH: '+ this.path);
@@ -99,16 +101,12 @@ export class RobotState {
 				console.log('PATH: '+ this.path);
 
 				if (this.map.targetResult === this.path) {
-					target = new Audio('/sounds/lucky.wav');
-					playAudio(target);
-				} else {
-					target = new Audio('/sounds/not_here.wav');
 					const realValue = new Audio('/sounds/' + this.map.targetResult + '.wav');
 					playAudio(realValue);
 				}
 			}
-
-	} else {
+			console.log("Not target!");
+		} else {
 		
 			if (this.reachedNonTarget()) {
 				const wrongAudio = new Audio('/sounds/wrong.wav');
@@ -147,5 +145,6 @@ export class RobotState {
 			(pos) => pos.x === this.position.x && pos.y === this.position.y
 		);
 	}
+
 
 }

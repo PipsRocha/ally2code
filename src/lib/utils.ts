@@ -63,9 +63,23 @@ export function playAudio(audio: HTMLAudioElement) {
 	});
 }
 
-export function notEqualsCheck(a: number[], b: number[]) {
-	return JSON.stringify(a) !== JSON.stringify(b);
+//export function notEqualsCheck(a: number[], b: number[]) {
+//	return JSON.stringify(a) !== JSON.stringify(b);}
+
+export function notEqualsCheck(
+	a: { code: number; angle: number | null }[],
+	b: { code: number; angle: number | null }[]
+): boolean {
+	if (a.length !== b.length) return true;
+
+	for (let i = 0; i < a.length; i++) {
+		if (a[i].code !== b[i].code || a[i].angle !== b[i].angle) {
+			return true;
+		}
+	}
+	return false;
 }
+
 
 export function equalsCheck(a: number[], b: number[]) {
     return JSON.stringify(a) === JSON.stringify(b);
