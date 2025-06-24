@@ -36,6 +36,18 @@ export class RobotState {
 		this.path = this.map.matrix[map.initialPosition.y][map.initialPosition.x];
 	}
 
+	setLabyrinth(newLabyrinth: Labyrinth | Maze | Animals) {
+		this.map = { ...newLabyrinth };
+		this.position = newLabyrinth.initialPosition;
+		this.orientation = newLabyrinth.initialOrientation;
+		this.path = this.map.matrix[newLabyrinth.initialPosition.y][newLabyrinth.initialPosition.x];
+	}
+
+	setMode(mode: Mode) {
+		this.mode = mode;
+	}
+
+
 	async connect() {
 		await this.robot.connect();
 		this.connectionState = 'connected';
@@ -109,13 +121,13 @@ export class RobotState {
 		} else {
 		
 			if (this.reachedNonTarget()) {
-				const wrongAudio = new Audio('/sounds/wrong.wav');
+				const wrongAudio = new Audio('/sounds/not_belonging.wav');
 				playAudio(wrongAudio);
 				return;
 			}
 
 			if (this.reachedTarget()) {
-				const correctAudio = new Audio('/sounds/lucky.wav');
+				const correctAudio = new Audio('/sounds/belongs.wav');
 				playAudio(correctAudio);
 			}
 	}
@@ -146,5 +158,10 @@ export class RobotState {
 		);
 	}
 
+	resetMap() {
+		this.position = this.map.initialPosition;
+		this.orientation = this.map.initialOrientation;
+		this.path = this.map.matrix[this.position.y][this.position.x];
+	}
 
 }

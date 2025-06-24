@@ -36,12 +36,26 @@
 	const labyrinthOptions: { label: string; value: Labyrinth | Maze | Animals}[] = [
 		{ label: 'Training', value: labyrinths.labyrinth_train },
 
-		{ label: 'Maze 1', value: maze.maze_p1 },
-		{ label: 'Maze 2', value: maze.maze_p2 },
-		{ label: 'Maze 3', value: maze.maze_p3 },
-		{ label: 'Maze 4', value: maze.maze_p4 },
-		{ label: 'Maze 5', value: maze.maze_p5 },
-		{ label: 'Maze 6', value: maze.maze_p6 },
+		{ label: 'Habitat Penguim', value: animalmaze.habitat_p },
+		{ label: 'Habitat Urso', value: animalmaze.habitat_u },
+		{ label: 'Habitat Vaca', value: animalmaze.habitat_v },
+		{ label: 'Habitat Baleia', value: animalmaze.habitat_b },
+		{ label: 'Habitat Tartaruga', value: animalmaze.habitat_t },
+		{ label: 'Habitat Elefante', value: animalmaze.habitat_e },
+
+		{ label: 'Alimentação Penguim', value: animalmaze.food_p },
+		{ label: 'Alimentação Urso', value: animalmaze.food_u },
+		{ label: 'Alimentação Vaca', value: animalmaze.food_v },
+		{ label: 'Alimentação Baleia', value: animalmaze.food_b },
+		{ label: 'Alimentação Tartaruga', value: animalmaze.food_t },
+		{ label: 'Alimentação Elefante', value: animalmaze.food_e },
+
+		{ label: 'Característica Penguim', value: animalmaze.fur_p },
+		{ label: 'Característica Urso', value: animalmaze.fur_u },
+		{ label: 'Característica Vaca', value: animalmaze.fur_v },
+		{ label: 'Característica Baleia', value: animalmaze.fur_b },
+		{ label: 'Característica Tartaruga', value: animalmaze.fur_t },
+		{ label: 'Característica Elefante', value: animalmaze.fur_e },
 	];
 
 	let selectedRobot: { label: string; value: RobotType } = $state(robotOptions[0]);
@@ -340,6 +354,7 @@ async function playSounds(code: number | string, angle: number | null) {
 			
 				
 			<Button on:click={() => inverse()}>Inverse</Button>
+			<Button on:click={() => robotState.resetMap()}>Start Over</Button>
 
 		
 			<Select.Root bind:selected={selectedLabyrinth}>
